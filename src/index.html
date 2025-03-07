@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Virtual Rube Goldberg Machine Builder</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Inline styles; you can move these to a separate style.css -->
+  <!-- Inline styles; consider moving to style.css -->
   <style>
     body, html {
       margin: 0;
@@ -26,6 +26,30 @@
       margin: 10px;
       padding: 15px 30px;
       font-size: 18px;
+      cursor: pointer;
+    }
+    /* Scenario Selection Screen */
+    #scenario-selection {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #f8f8f8;
+    }
+    #scenario-selection h2 { margin-bottom: 20px; }
+    #scenario-selection .scenario-button {
+      margin: 10px;
+      padding: 12px 24px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #scenario-selection button.back {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 8px 12px;
+      font-size: 14px;
       cursor: pointer;
     }
     /* Builder Interface */
@@ -58,7 +82,7 @@
       flex-direction: column;
       gap: 5px;
     }
-    /* Top row: Return Home, Save Config, config dropdown, Load Config */
+    /* Top row: Return Home, Save/Load Config */
     #builder-controls .top-row {
       display: flex;
       align-items: center;
@@ -78,13 +102,12 @@
       cursor: pointer;
       font-size: 14px;
     }
-    /* Builder Canvas with pegboard background */
     #builder-canvas {
       flex: 1;
       border: 1px solid #ccc;
       position: relative;
       overflow: hidden;
-      background: url('assets/pegboard.png') repeat;
+      background: url('pegboard.png') repeat;
     }
     /* --- Simulation View --- */
     #simulation-view { display: none; height: 100%; }
@@ -185,8 +208,16 @@
 <div id="mode-selection">
   <h1>Virtual Rube Goldberg Machine Builder</h1>
   <button data-mode="debug">Debug a Machine</button>
-  <button data-mode="objective">Build from Objective</button>
+  <button data-mode="scenario">Play Scenario</button>
   <button data-mode="sandbox">Sandbox Mode</button>
+</div>
+
+<!-- Scenario Selection Screen -->
+<div id="scenario-selection">
+  <button class="back" id="scenario-back">Back</button>
+  <h2>Choose a Scenario</h2>
+  <button class="scenario-button" data-scenario="bucket">Bucket Challenge</button>
+  <button class="scenario-button" data-scenario="maze">Maze Runner</button>
 </div>
 
 <!-- Builder Interface -->
@@ -225,10 +256,10 @@
         <p>Feedback and hints will appear here during the simulation.</p>
         <h3>Help</h3>
         <p>
-          Drag items from the toolbox onto the canvas to build your machine.
-          Reposition items by dragging them.
-          Right-click an item to modify its properties.
-          Use the buttons above to save, load, reset, undo, and redo your work.
+          Drag items from the toolbox onto the canvas to build your machine.<br>
+          Reposition items by dragging them.<br>
+          Right-click an item to modify its properties.<br>
+          Use the buttons above to save, load, reset, undo, and redo your work.<br>
           When you're ready, click "Run Simulation" to see your design in action!
         </p>
       </div>
@@ -361,17 +392,24 @@
 
     /***** Screen Toggle *****/
     const modeSelection = document.getElementById('mode-selection');
+    const scenarioSelection = document.getElementById('scenario-selection');
     const builderInterface = document.getElementById('builder-interface');
     const builderView = document.getElementById('builder-view');
     const simulationView = document.getElementById('simulation-view');
     const modeButtons = document.querySelectorAll('#mode-selection button');
     modeButtons.forEach(button => {
       button.addEventListener('click', () => {
-        modeSelection.style.display = 'none';
-        builderInterface.style.display = 'block';
-        builderView.style.display = 'block';
-        simulationView.style.display = 'none';
-        updateConfigList();
+        const mode = button.getAttribute('data-mode');
+        if(mode === "scenario") {
+          modeSelection.style.display = 'none';
+          scenarioSelection.style.display = 'flex';
+        } else {
+          modeSelection.style.display = 'none';
+          builderInterface.style.display = 'block';
+          builderView.style.display = 'block';
+          simulationView.style.display = 'none';
+          updateConfigList();
+        }
       });
     });
     document.getElementById('return-home').addEventListener('click', () => {
@@ -381,6 +419,35 @@
       saveState();
       builderInterface.style.display = 'none';
       modeSelection.style.display = 'flex';
+    });
+
+    // Back button in scenario selection
+    document.getElementById('scenario-back').addEventListener('click', () => {
+      scenarioSelection.style.display = 'none';
+      modeSelection.style.display = 'flex';
+    });
+
+    // Scenario button click handler (for demonstration, we add two example scenarios)
+    const scenarioButtons = document.querySelectorAll('.scenario-button');
+    scenarioButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const scenario = button.getAttribute('data-scenario');
+        let scenarioText = "";
+        if(scenario === "bucket") {
+          scenarioText = "Bucket Challenge: A marble will drop from the top left. Your goal is to guide it to the bucket at the bottom right.";
+        } else if(scenario === "maze") {
+          scenarioText = "Maze Runner: Navigate the marble through a maze of obstacles.";
+        }
+        // Show scenario details in a modal, then load the builder view.
+        showPrompt(scenarioText + "\n\nPress OK to continue.", "").then(() => {
+          scenarioSelection.style.display = 'none';
+          builderInterface.style.display = 'block';
+          builderView.style.display = 'block';
+          simulationView.style.display = 'none';
+          updateConfigList();
+          // Optionally, pre-load scenario-specific elements into the builder canvas.
+        });
+      });
     });
 
     /***** Builder Controls *****/
@@ -587,7 +654,7 @@
       game = new Phaser.Game(simConfig);
     }
     function preloadSim() {
-      this.load.image('sky', 'https://labs.phaser.io/assets/skies/sky3.png');
+      this.load.image('sky', 'https://labs.phaser.io/assets/skies/space3.png');
     }
     function createSim() {
       // Set world bounds and add an invisible floor.
