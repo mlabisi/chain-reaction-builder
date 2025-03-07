@@ -1,12 +1,651 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Hello World!</title>
-    <link rel="stylesheet" href="index.css" />
-  </head>
-  <body>
-    <h1>💖 Hello World!</h1>
-    <p>Welcome to your Electron application.</p>
-  </body>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Virtual Rube Goldberg Machine Builder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Inline styles; you can move these to a separate style.css -->
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+    /* Mode Selection Screen */
+    #mode-selection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #f0f0f0;
+    }
+    #mode-selection h1 { margin-bottom: 20px; }
+    #mode-selection button {
+      margin: 10px;
+      padding: 15px 30px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    /* Builder Interface */
+    #builder-interface { display: none; height: 100vh; }
+    /* --- Builder View --- */
+    #builder-view { display: block; height: 100%; }
+    #builder-container { display: flex; height: 100%; }
+    /* Toolbox Panel */
+    #toolbox {
+      width: 200px;
+      background: #e0e0e0;
+      padding: 10px;
+    }
+    #toolbox h3 { text-align: center; }
+    .component {
+      margin: 10px 0;
+      padding: 8px;
+      background: #fff;
+      border: 1px solid #ccc;
+      text-align: center;
+      cursor: grab;
+    }
+    /* Main Area (builder) */
+    #builder-main { flex: 1; display: flex; flex-direction: column; position: relative; }
+    /* Updated builder controls with two rows */
+    #builder-controls {
+      padding: 10px;
+      background: #ddd;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    /* Top row: Return Home, Save Config, config dropdown, Load Config */
+    #builder-controls .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    /* Bottom row: Reset, Undo, Redo, Run Simulation */
+    #builder-controls .bottom-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 5px;
+    }
+    #builder-controls button,
+    #builder-controls select {
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    /* Builder Canvas with pegboard background */
+    #builder-canvas {
+      flex: 1;
+      border: 1px solid #ccc;
+      position: relative;
+      overflow: hidden;
+      background: url('assets/pegboard.png') repeat;
+    }
+    /* --- Simulation View --- */
+    #simulation-view { display: none; height: 100%; }
+    #simulation-controls {
+      padding: 10px;
+      background: #ddd;
+      text-align: center;
+    }
+    /* Only the Return to Builder button is shown */
+    #simulation-controls button {
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    #phaser-container {
+      height: calc(100% - 50px);
+      border: 1px solid #ccc;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Feedback Panel (builder view) */
+    #feedback {
+      width: 250px;
+      background: #fafafa;
+      border-left: 1px solid #ddd;
+      padding: 10px;
+      overflow-y: auto;
+    }
+    /* Dropped Component Base Style */
+    .dropped-component {
+      position: absolute;
+      cursor: move;
+      user-select: none;
+    }
+    /* Custom shape for lever – a thin horizontal rectangle */
+    .dropped-component.lever {
+      width: 100px;
+      height: 20px;
+      background-color: #e6ffe6;
+      border: 2px solid #008000;
+    }
+    /* Custom shape for pulley – a circle */
+    .dropped-component.pulley {
+      width: 60px;
+      height: 60px;
+      background-color: #fff4e6;
+      border: 2px solid #ff8c00;
+      border-radius: 50%;
+    }
+    /* Custom shape for inclined-plane – a rotated rectangle */
+    .dropped-component.inclined-plane {
+      width: 150px;
+      height: 30px;
+      background-color: #e6f0ff;
+      border: 2px solid #0000ff;
+      transform-origin: top left;
+    }
+    /* Modal Overlay Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-box {
+      background: #fff;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.25);
+      max-width: 300px;
+      width: 80%;
+    }
+    .modal-box h3 { margin-top: 0; }
+    .modal-box label { display: block; margin-top: 10px; }
+    .modal-box input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+    .modal-box .modal-buttons {
+      margin-top: 10px;
+      text-align: right;
+    }
+    .modal-box button {
+      margin-left: 10px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<!-- Mode Selection Screen -->
+<div id="mode-selection">
+  <h1>Virtual Rube Goldberg Machine Builder</h1>
+  <button data-mode="debug">Debug a Machine</button>
+  <button data-mode="objective">Build from Objective</button>
+  <button data-mode="sandbox">Sandbox Mode</button>
+</div>
+
+<!-- Builder Interface -->
+<div id="builder-interface">
+  <!-- Builder View -->
+  <div id="builder-view">
+    <div id="builder-controls">
+      <div class="top-row">
+        <button id="return-home">Return Home</button>
+        <div>
+          <button id="save-config">Save Config</button>
+          <select id="config-list"><option value="">--Select Config--</option></select>
+          <button id="load-config">Load Config</button>
+        </div>
+      </div>
+      <div class="bottom-row">
+        <button id="reset-builder">Reset</button>
+        <button id="undo-builder">Undo</button>
+        <button id="redo-builder">Redo</button>
+        <button id="run-simulation">Run Simulation</button>
+      </div>
+    </div>
+    <div id="builder-container">
+      <!-- Toolbox Panel -->
+      <div id="toolbox">
+        <h3>Toolbox</h3>
+        <div class="component" draggable="true" data-type="lever">Lever</div>
+        <div class="component" draggable="true" data-type="pulley">Pulley</div>
+        <div class="component" draggable="true" data-type="inclined-plane">Inclined Plane</div>
+      </div>
+      <!-- Builder Canvas -->
+      <div id="builder-canvas"></div>
+      <!-- Feedback Panel -->
+      <div id="feedback">
+        <h3>Feedback</h3>
+        <p>Feedback and hints will appear here during the simulation.</p>
+        <h3>Help</h3>
+        <p>
+          Drag items from the toolbox onto the canvas to build your machine.
+          Reposition items by dragging them.
+          Right-click an item to modify its properties.
+          Use the buttons above to save, load, reset, undo, and redo your work.
+          When you're ready, click "Run Simulation" to see your design in action!
+        </p>
+      </div>
+    </div>
+  </div>
+  <!-- Simulation View -->
+  <div id="simulation-view">
+    <div id="simulation-controls">
+      <button id="return-builder">Return to Builder</button>
+    </div>
+    <div id="phaser-container"></div>
+  </div>
+</div>
+
+<!-- Simple Modal Prompt Function -->
+<script>
+  function showPrompt(message, defaultValue = '') {
+    return new Promise((resolve) => {
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      const modalBox = document.createElement('div');
+      modalBox.className = 'modal-box';
+      const messageElem = document.createElement('p');
+      messageElem.innerText = message;
+      const inputElem = document.createElement('input');
+      inputElem.type = 'text';
+      inputElem.value = defaultValue;
+      const buttonsDiv = document.createElement('div');
+      buttonsDiv.className = 'modal-buttons';
+      const okButton = document.createElement('button');
+      okButton.innerText = 'OK';
+      const cancelButton = document.createElement('button');
+      cancelButton.innerText = 'Cancel';
+
+      buttonsDiv.appendChild(okButton);
+      buttonsDiv.appendChild(cancelButton);
+      modalBox.appendChild(messageElem);
+      modalBox.appendChild(inputElem);
+      modalBox.appendChild(buttonsDiv);
+      overlay.appendChild(modalBox);
+      document.body.appendChild(overlay);
+      inputElem.focus();
+
+      okButton.addEventListener('click', () => {
+        document.body.removeChild(overlay);
+        resolve(inputElem.value);
+      });
+      cancelButton.addEventListener('click', () => {
+        document.body.removeChild(overlay);
+        resolve(null);
+      });
+      inputElem.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { okButton.click(); }
+      });
+    });
+  }
+</script>
+
+<!-- Custom Properties Dialog Function -->
+<script>
+  function showPropertiesDialog(title, fields) {
+    return new Promise((resolve) => {
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      const modalBox = document.createElement('div');
+      modalBox.className = 'modal-box';
+
+      const titleElem = document.createElement('h3');
+      titleElem.innerText = title;
+      modalBox.appendChild(titleElem);
+
+      const form = document.createElement('form');
+      fields.forEach(field => {
+        const label = document.createElement('label');
+        label.innerText = field.label;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.name = field.name;
+        input.value = field.value;
+        form.appendChild(label);
+        form.appendChild(input);
+      });
+      modalBox.appendChild(form);
+
+      const buttonsDiv = document.createElement('div');
+      buttonsDiv.className = 'modal-buttons';
+      const okButton = document.createElement('button');
+      okButton.innerText = 'OK';
+      const cancelButton = document.createElement('button');
+      cancelButton.innerText = 'Cancel';
+      buttonsDiv.appendChild(okButton);
+      buttonsDiv.appendChild(cancelButton);
+      modalBox.appendChild(buttonsDiv);
+      overlay.appendChild(modalBox);
+      document.body.appendChild(overlay);
+
+      form.addEventListener('submit', (e) => { e.preventDefault(); okButton.click(); });
+
+      okButton.addEventListener('click', () => {
+        const data = {};
+        const inputs = form.querySelectorAll('input');
+        inputs.forEach(input => { data[input.name] = input.value; });
+        document.body.removeChild(overlay);
+        resolve(data);
+      });
+      cancelButton.addEventListener('click', () => {
+        document.body.removeChild(overlay);
+        resolve(null);
+      });
+    });
+  }
+</script>
+
+<!-- Main Application Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM fully loaded and parsed.");
+    const Phaser = require('phaser');
+
+    /***** Global Variables for Undo/Redo *****/
+    let builderHistory = [];
+    let historyIndex = -1;
+    const builderCanvas = document.getElementById('builder-canvas');
+    function saveState() {
+      builderHistory = builderHistory.slice(0, historyIndex + 1);
+      builderHistory.push(builderCanvas.innerHTML);
+      historyIndex++;
+    }
+    saveState();
+
+    /***** Screen Toggle *****/
+    const modeSelection = document.getElementById('mode-selection');
+    const builderInterface = document.getElementById('builder-interface');
+    const builderView = document.getElementById('builder-view');
+    const simulationView = document.getElementById('simulation-view');
+    const modeButtons = document.querySelectorAll('#mode-selection button');
+    modeButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        modeSelection.style.display = 'none';
+        builderInterface.style.display = 'block';
+        builderView.style.display = 'block';
+        simulationView.style.display = 'none';
+        updateConfigList();
+      });
+    });
+    document.getElementById('return-home').addEventListener('click', () => {
+      builderCanvas.innerHTML = '';
+      builderHistory = [];
+      historyIndex = -1;
+      saveState();
+      builderInterface.style.display = 'none';
+      modeSelection.style.display = 'flex';
+    });
+
+    /***** Builder Controls *****/
+    document.getElementById('reset-builder').addEventListener('click', () => {
+      builderCanvas.innerHTML = '';
+      saveState();
+    });
+    document.getElementById('undo-builder').addEventListener('click', () => {
+      if (historyIndex > 0) { historyIndex--; builderCanvas.innerHTML = builderHistory[historyIndex]; }
+    });
+    document.getElementById('redo-builder').addEventListener('click', () => {
+      if (historyIndex < builderHistory.length - 1) { historyIndex++; builderCanvas.innerHTML = builderHistory[historyIndex]; }
+    });
+
+    /***** Save/Load Configuration *****/
+    document.getElementById('save-config').addEventListener('click', () => {
+      showPrompt("Enter a name for this configuration:").then(configName => {
+        if (!configName) return;
+        const configData = [];
+        const comps = builderCanvas.querySelectorAll('.dropped-component');
+        comps.forEach(comp => {
+          configData.push({
+            type: comp.dataset.type,
+            x: parseInt(comp.style.left, 10),
+            y: parseInt(comp.style.top, 10),
+            angle: comp.dataset.angle,
+            friction: comp.dataset.friction,
+            fulcrum: comp.dataset.fulcrum,
+            pivot: comp.dataset.pivot,
+            radius: comp.dataset.radius
+          });
+        });
+        let savedConfigs = JSON.parse(localStorage.getItem('machineConfigs')) || {};
+        savedConfigs[configName] = configData;
+        localStorage.setItem('machineConfigs', JSON.stringify(savedConfigs));
+        alert("Configuration saved!");
+        updateConfigList();
+      });
+    });
+    document.getElementById('load-config').addEventListener('click', () => {
+      const select = document.getElementById('config-list');
+      const configName = select.value;
+      if (!configName) { alert("Please select a configuration to load."); return; }
+      const savedConfigs = JSON.parse(localStorage.getItem('machineConfigs')) || {};
+      const configData = savedConfigs[configName];
+      if (!configData) { alert("Configuration not found."); return; }
+      builderCanvas.innerHTML = '';
+      configData.forEach(item => {
+        createDroppedComponent(item.type, item.x + 40, item.y + 40, { angle: item.angle, friction: item.friction, fulcrum: item.fulcrum, pivot: item.pivot, radius: item.radius });
+      });
+      saveState();
+      alert("Configuration loaded!");
+    });
+    function updateConfigList() {
+      const select = document.getElementById('config-list');
+      select.innerHTML = '<option value="">--Select Config--</option>';
+      const savedConfigs = JSON.parse(localStorage.getItem('machineConfigs')) || {};
+      Object.keys(savedConfigs).forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.innerText = name;
+        select.appendChild(option);
+      });
+    }
+
+    /***** Basic Drag and Drop for Toolbox Components *****/
+    const components = document.querySelectorAll('.component');
+    components.forEach(component => {
+      component.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', component.getAttribute('data-type'));
+      });
+    });
+    builderCanvas.addEventListener('dragover', (e) => { e.preventDefault(); });
+    builderCanvas.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const componentType = e.dataTransfer.getData('text/plain');
+      const rect = builderCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      createDroppedComponent(componentType, x, y);
+      saveState();
+    });
+
+    // createDroppedComponent: creates a draggable builder element using custom shapes.
+    function createDroppedComponent(componentType, x, y, properties = {}) {
+      const newComponent = document.createElement('div');
+      newComponent.className = 'dropped-component ' + componentType;
+      if(componentType === 'lever') {
+        newComponent.style.width = '100px';
+        newComponent.style.height = '20px';
+        newComponent.style.left = `${x - 50}px`;
+        newComponent.style.top = `${y - 10}px`;
+      } else if(componentType === 'pulley') {
+        newComponent.style.width = '60px';
+        newComponent.style.height = '60px';
+        newComponent.style.left = `${x - 30}px`;
+        newComponent.style.top = `${y - 30}px`;
+      } else if(componentType === 'inclined-plane') {
+        newComponent.style.width = '150px';
+        newComponent.style.height = '30px';
+        newComponent.style.left = `${x - 75}px`;
+        newComponent.style.top = `${y - 15}px`;
+        newComponent.dataset.angle = properties.angle || '0';
+        newComponent.style.transform = `rotate(${newComponent.dataset.angle}deg)`;
+      } else {
+        newComponent.style.left = `${x - 40}px`;
+        newComponent.style.top = `${y - 40}px`;
+      }
+      newComponent.dataset.type = componentType;
+      newComponent.dataset.angle = properties.angle || '0';
+      if(componentType === 'inclined-plane' && !properties.friction) { properties.friction = '0.05'; }
+      if(componentType === 'pulley' && !properties.friction) { properties.friction = '0.1'; }
+      newComponent.dataset.friction = properties.friction || '';
+
+      if (componentType === 'lever') {
+        newComponent.dataset.fulcrum = properties.fulcrum || 'center';
+        newComponent.dataset.pivot = properties.pivot || '0.5';
+      }
+      if (componentType === 'pulley') {
+        newComponent.dataset.radius = properties.radius || '30';
+      }
+
+      newComponent.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+        if(newComponent.dataset.type === 'inclined-plane') {
+          const fields = [
+            { name: 'angle', label: 'Angle (degrees):', value: newComponent.dataset.angle },
+            { name: 'friction', label: 'Friction coefficient:', value: newComponent.dataset.friction }
+          ];
+          showPropertiesDialog('Edit Inclined Plane Properties', fields).then(data => {
+            if(data !== null) {
+              newComponent.dataset.angle = data.angle;
+              newComponent.dataset.friction = data.friction;
+              newComponent.style.transform = `rotate(${data.angle}deg)`;
+            }
+          });
+        } else if(newComponent.dataset.type === 'lever') {
+          const fields = [
+            { name: 'fulcrum', label: 'Fulcrum (left, center, right):', value: newComponent.dataset.fulcrum },
+            { name: 'pivot', label: 'Pivot ratio (0-1):', value: newComponent.dataset.pivot }
+          ];
+          showPropertiesDialog('Edit Lever Properties', fields).then(data => {
+            if(data !== null) {
+              newComponent.dataset.fulcrum = data.fulcrum;
+              newComponent.dataset.pivot = data.pivot;
+            }
+          });
+        } else if(newComponent.dataset.type === 'pulley') {
+          const fields = [
+            { name: 'radius', label: 'Radius:', value: newComponent.dataset.radius },
+            { name: 'friction', label: 'Friction coefficient:', value: newComponent.dataset.friction }
+          ];
+          showPropertiesDialog('Edit Pulley Properties', fields).then(data => {
+            if(data !== null) {
+              newComponent.dataset.radius = data.radius;
+              newComponent.dataset.friction = data.friction;
+            }
+          });
+        }
+      });
+
+      newComponent.addEventListener('mousedown', (event) => {
+        if (event.button !== 0) return;
+        const offsetX = event.clientX - newComponent.offsetLeft;
+        const offsetY = event.clientY - newComponent.offsetTop;
+        function mouseMoveHandler(e) {
+          newComponent.style.left = e.clientX - offsetX + 'px';
+          newComponent.style.top = e.clientY - offsetY + 'px';
+        }
+        function mouseUpHandler() {
+          document.removeEventListener('mousemove', mouseMoveHandler);
+          document.removeEventListener('mouseup', mouseUpHandler);
+          saveState();
+        }
+        document.addEventListener('mousemove', mouseMoveHandler);
+        document.addEventListener('mouseup', mouseUpHandler);
+      });
+      builderCanvas.appendChild(newComponent);
+    }
+
+    /***** Simulation Setup (using Matter.js) *****/
+    let game;
+    let simConfig;
+    function createSimulation(configData) {
+      simConfig = {
+        type: Phaser.AUTO,
+        parent: 'phaser-container',
+        width: 800,
+        height: 600,
+        physics: {
+          default: 'matter',
+          matter: {
+            gravity: { y: 1 },
+            debug: true
+          }
+        },
+        scene: {
+          init: function() { this.configData = configData; },
+          preload: preloadSim,
+          create: createSim,
+          update: updateSim
+        }
+      };
+      game = new Phaser.Game(simConfig);
+    }
+    function preloadSim() {
+      this.load.image('sky', 'https://labs.phaser.io/assets/skies/sky3.png');
+    }
+    function createSim() {
+      // Set world bounds and add an invisible floor.
+      this.matter.world.setBounds(0, 0, 800, 600);
+      this.matter.add.rectangle(400, 590, 800, 20, { isStatic: true });
+      this.add.image(400, 300, 'sky');
+      // Create static Matter bodies from builder items.
+      this.configData.forEach(item => {
+        let centerX = item.x + 40;
+        let centerY = item.y + 40;
+        if (item.type === 'lever') {
+          let angleRad = Phaser.Math.DegToRad(parseFloat(item.angle) || 0);
+          this.matter.add.rectangle(centerX, centerY, 100, 20, { isStatic: true, angle: angleRad });
+        } else if (item.type === 'pulley') {
+          let r = parseFloat(item.radius) || 30;
+          this.matter.add.circle(centerX, centerY, r, { isStatic: true, friction: parseFloat(item.friction) || 0.1 });
+        } else if (item.type === 'inclined-plane') {
+          let angleRad = Phaser.Math.DegToRad(parseFloat(item.angle) || 0);
+          this.matter.add.rectangle(centerX, centerY, 150, 30, { isStatic: true, friction: parseFloat(item.friction) || 0.05, angle: angleRad });
+        } else {
+          this.matter.add.rectangle(centerX, centerY, 80, 80, { isStatic: true });
+        }
+      });
+      // On pointer down, drop a dynamic marble.
+      this.input.on('pointerdown', function(pointer) {
+        this.matter.add.circle(pointer.x, pointer.y, 15, { restitution: 0.8, friction: 0.005 });
+      }, this);
+    }
+    function updateSim() { /* Update loop if needed */ }
+
+    /***** Transition to Simulation Mode *****/
+    document.getElementById('run-simulation').addEventListener('click', () => {
+      builderView.style.display = 'none';
+      simulationView.style.display = 'block';
+      const configData = [];
+      const comps = builderCanvas.querySelectorAll('.dropped-component');
+      comps.forEach(comp => {
+        configData.push({
+          type: comp.dataset.type,
+          x: parseInt(comp.style.left, 10),
+          y: parseInt(comp.style.top, 10),
+          angle: comp.dataset.angle,
+          friction: comp.dataset.friction,
+          fulcrum: comp.dataset.fulcrum,
+          pivot: comp.dataset.pivot,
+          radius: comp.dataset.radius
+        });
+      });
+      createSimulation(configData);
+    });
+
+    /***** Simulation Controls *****/
+    document.getElementById('return-builder').addEventListener('click', () => {
+      if (game) { game.destroy(true); game = null; }
+      simulationView.style.display = 'none';
+      builderView.style.display = 'block';
+    });
+  });
+</script>
+</body>
 </html>
