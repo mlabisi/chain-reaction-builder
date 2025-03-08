@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>Virtual Rube Goldberg Machine Builder</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Inline styles; consider moving to style.css -->
   <style>
     body, html {
       margin: 0;
@@ -21,7 +20,9 @@
       height: 100vh;
       background: #f0f0f0;
     }
-    #mode-selection h1 { margin-bottom: 20px; }
+    #mode-selection h1 {
+      margin-bottom: 20px;
+    }
     #mode-selection button {
       margin: 10px;
       padding: 15px 30px;
@@ -37,7 +38,9 @@
       height: 100vh;
       background: #f8f8f8;
     }
-    #scenario-selection h2 { margin-bottom: 20px; }
+    #scenario-selection h2 {
+      margin-bottom: 20px;
+    }
     #scenario-selection .scenario-button {
       margin: 10px;
       padding: 12px 24px;
@@ -53,17 +56,28 @@
       cursor: pointer;
     }
     /* Builder Interface */
-    #builder-interface { display: none; height: 100vh; }
+    #builder-interface {
+      display: none;
+      height: 100vh;
+    }
     /* --- Builder View --- */
-    #builder-view { display: block; height: 100%; }
-    #builder-container { display: flex; height: 100%; }
+    #builder-view {
+      display: block;
+      height: 100%;
+    }
+    #builder-container {
+      display: flex;
+      height: 100%;
+    }
     /* Toolbox Panel */
     #toolbox {
       width: 200px;
       background: #e0e0e0;
       padding: 10px;
     }
-    #toolbox h3 { text-align: center; }
+    #toolbox h3 {
+      text-align: center;
+    }
     .component {
       margin: 10px 0;
       padding: 8px;
@@ -73,7 +87,12 @@
       cursor: grab;
     }
     /* Main Area (builder) */
-    #builder-main { flex: 1; display: flex; flex-direction: column; position: relative; }
+    #builder-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
     /* Updated builder controls with two rows */
     #builder-controls {
       padding: 10px;
@@ -107,16 +126,18 @@
       border: 1px solid #ccc;
       position: relative;
       overflow: hidden;
-      background: url('pegboard.png') repeat;
+      background: url('assets/pegboard.png') repeat;
     }
     /* --- Simulation View --- */
-    #simulation-view { display: none; height: 100%; }
+    #simulation-view {
+      display: none;
+      height: 100%;
+    }
     #simulation-controls {
       padding: 10px;
       background: #ddd;
       text-align: center;
     }
-    /* Only the Return to Builder button is shown */
     #simulation-controls button {
       padding: 8px 16px;
       cursor: pointer;
@@ -168,8 +189,10 @@
     /* Modal Overlay Styles */
     .modal-overlay {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       background: rgba(0,0,0,0.5);
       display: flex;
       align-items: center;
@@ -184,8 +207,13 @@
       max-width: 300px;
       width: 80%;
     }
-    .modal-box h3 { margin-top: 0; }
-    .modal-box label { display: block; margin-top: 10px; }
+    .modal-box h3 {
+      margin-top: 0;
+    }
+    .modal-box label {
+      display: block;
+      margin-top: 10px;
+    }
     .modal-box input {
       width: 100%;
       padding: 8px;
@@ -400,7 +428,7 @@
     modeButtons.forEach(button => {
       button.addEventListener('click', () => {
         const mode = button.getAttribute('data-mode');
-        if(mode === "scenario") {
+        if (mode === "scenario") {
           modeSelection.style.display = 'none';
           scenarioSelection.style.display = 'flex';
         } else {
@@ -421,31 +449,27 @@
       modeSelection.style.display = 'flex';
     });
 
-    // Back button in scenario selection
     document.getElementById('scenario-back').addEventListener('click', () => {
       scenarioSelection.style.display = 'none';
       modeSelection.style.display = 'flex';
     });
 
-    // Scenario button click handler (for demonstration, we add two example scenarios)
     const scenarioButtons = document.querySelectorAll('.scenario-button');
     scenarioButtons.forEach(button => {
       button.addEventListener('click', () => {
         const scenario = button.getAttribute('data-scenario');
         let scenarioText = "";
-        if(scenario === "bucket") {
+        if (scenario === "bucket") {
           scenarioText = "Bucket Challenge: A marble will drop from the top left. Your goal is to guide it to the bucket at the bottom right.";
-        } else if(scenario === "maze") {
+        } else if (scenario === "maze") {
           scenarioText = "Maze Runner: Navigate the marble through a maze of obstacles.";
         }
-        // Show scenario details in a modal, then load the builder view.
         showPrompt(scenarioText + "\n\nPress OK to continue.", "").then(() => {
           scenarioSelection.style.display = 'none';
           builderInterface.style.display = 'block';
           builderView.style.display = 'block';
           simulationView.style.display = 'none';
           updateConfigList();
-          // Optionally, pre-load scenario-specific elements into the builder canvas.
         });
       });
     });
@@ -456,10 +480,16 @@
       saveState();
     });
     document.getElementById('undo-builder').addEventListener('click', () => {
-      if (historyIndex > 0) { historyIndex--; builderCanvas.innerHTML = builderHistory[historyIndex]; }
+      if (historyIndex > 0) {
+        historyIndex--;
+        builderCanvas.innerHTML = builderHistory[historyIndex];
+      }
     });
     document.getElementById('redo-builder').addEventListener('click', () => {
-      if (historyIndex < builderHistory.length - 1) { historyIndex++; builderCanvas.innerHTML = builderHistory[historyIndex]; }
+      if (historyIndex < builderHistory.length - 1) {
+        historyIndex++;
+        builderCanvas.innerHTML = builderHistory[historyIndex];
+      }
     });
 
     /***** Save/Load Configuration *****/
@@ -490,13 +520,25 @@
     document.getElementById('load-config').addEventListener('click', () => {
       const select = document.getElementById('config-list');
       const configName = select.value;
-      if (!configName) { alert("Please select a configuration to load."); return; }
+      if (!configName) {
+        alert("Please select a configuration to load.");
+        return;
+      }
       const savedConfigs = JSON.parse(localStorage.getItem('machineConfigs')) || {};
       const configData = savedConfigs[configName];
-      if (!configData) { alert("Configuration not found."); return; }
+      if (!configData) {
+        alert("Configuration not found.");
+        return;
+      }
       builderCanvas.innerHTML = '';
       configData.forEach(item => {
-        createDroppedComponent(item.type, item.x + 40, item.y + 40, { angle: item.angle, friction: item.friction, fulcrum: item.fulcrum, pivot: item.pivot, radius: item.radius });
+        createDroppedComponent(item.type, item.x + 40, item.y + 40, {
+          angle: item.angle,
+          friction: item.friction,
+          fulcrum: item.fulcrum,
+          pivot: item.pivot,
+          radius: item.radius
+        });
       });
       saveState();
       alert("Configuration loaded!");
@@ -535,17 +577,17 @@
     function createDroppedComponent(componentType, x, y, properties = {}) {
       const newComponent = document.createElement('div');
       newComponent.className = 'dropped-component ' + componentType;
-      if(componentType === 'lever') {
+      if (componentType === 'lever') {
         newComponent.style.width = '100px';
         newComponent.style.height = '20px';
         newComponent.style.left = `${x - 50}px`;
         newComponent.style.top = `${y - 10}px`;
-      } else if(componentType === 'pulley') {
+      } else if (componentType === 'pulley') {
         newComponent.style.width = '60px';
         newComponent.style.height = '60px';
         newComponent.style.left = `${x - 30}px`;
         newComponent.style.top = `${y - 30}px`;
-      } else if(componentType === 'inclined-plane') {
+      } else if (componentType === 'inclined-plane') {
         newComponent.style.width = '150px';
         newComponent.style.height = '30px';
         newComponent.style.left = `${x - 75}px`;
@@ -558,8 +600,8 @@
       }
       newComponent.dataset.type = componentType;
       newComponent.dataset.angle = properties.angle || '0';
-      if(componentType === 'inclined-plane' && !properties.friction) { properties.friction = '0.05'; }
-      if(componentType === 'pulley' && !properties.friction) { properties.friction = '0.1'; }
+      if (componentType === 'inclined-plane' && !properties.friction) { properties.friction = '0.05'; }
+      if (componentType === 'pulley' && !properties.friction) { properties.friction = '0.1'; }
       newComponent.dataset.friction = properties.friction || '';
 
       if (componentType === 'lever') {
@@ -572,36 +614,36 @@
 
       newComponent.addEventListener('contextmenu', (event) => {
         event.preventDefault();
-        if(newComponent.dataset.type === 'inclined-plane') {
+        if (newComponent.dataset.type === 'inclined-plane') {
           const fields = [
             { name: 'angle', label: 'Angle (degrees):', value: newComponent.dataset.angle },
             { name: 'friction', label: 'Friction coefficient:', value: newComponent.dataset.friction }
           ];
           showPropertiesDialog('Edit Inclined Plane Properties', fields).then(data => {
-            if(data !== null) {
+            if (data !== null) {
               newComponent.dataset.angle = data.angle;
               newComponent.dataset.friction = data.friction;
               newComponent.style.transform = `rotate(${data.angle}deg)`;
             }
           });
-        } else if(newComponent.dataset.type === 'lever') {
+        } else if (newComponent.dataset.type === 'lever') {
           const fields = [
             { name: 'fulcrum', label: 'Fulcrum (left, center, right):', value: newComponent.dataset.fulcrum },
             { name: 'pivot', label: 'Pivot ratio (0-1):', value: newComponent.dataset.pivot }
           ];
           showPropertiesDialog('Edit Lever Properties', fields).then(data => {
-            if(data !== null) {
+            if (data !== null) {
               newComponent.dataset.fulcrum = data.fulcrum;
               newComponent.dataset.pivot = data.pivot;
             }
           });
-        } else if(newComponent.dataset.type === 'pulley') {
+        } else if (newComponent.dataset.type === 'pulley') {
           const fields = [
             { name: 'radius', label: 'Radius:', value: newComponent.dataset.radius },
             { name: 'friction', label: 'Friction coefficient:', value: newComponent.dataset.friction }
           ];
           showPropertiesDialog('Edit Pulley Properties', fields).then(data => {
-            if(data !== null) {
+            if (data !== null) {
               newComponent.dataset.radius = data.radius;
               newComponent.dataset.friction = data.friction;
             }
@@ -654,7 +696,7 @@
       game = new Phaser.Game(simConfig);
     }
     function preloadSim() {
-      this.load.image('sky', 'https://labs.phaser.io/assets/skies/space3.png');
+      this.load.image('sky', 'https://labs.phaser.io/assets/skies/sky4.png');
     }
     function createSim() {
       // Set world bounds and add an invisible floor.
