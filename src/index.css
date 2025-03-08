@@ -1,7 +1,225 @@
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
-    Arial, sans-serif;
-  margin: auto;
-  max-width: 38rem;
-  padding: 2rem;
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+}
+/* Mode Selection Screen */
+#mode-selection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: #f0f0f0;
+}
+#mode-selection h1 {
+  margin-bottom: 20px;
+}
+#mode-selection button {
+  margin: 10px;
+  padding: 15px 30px;
+  font-size: 18px;
+  cursor: pointer;
+}
+/* Scenario Selection Screen */
+#scenario-selection {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: #f8f8f8;
+}
+#scenario-selection h2 {
+  margin-bottom: 20px;
+}
+#scenario-selection .scenario-button {
+  margin: 10px;
+  padding: 12px 24px;
+  font-size: 16px;
+  cursor: pointer;
+}
+#scenario-selection button.back {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+/* Builder Interface */
+#builder-interface {
+  display: none;
+  height: 100vh;
+}
+/* --- Builder View --- */
+#builder-view {
+  display: block;
+  height: 100%;
+}
+#builder-container {
+  display: flex;
+  height: 100%;
+}
+/* Toolbox Panel */
+#toolbox {
+  width: 200px;
+  background: #e0e0e0;
+  padding: 10px;
+}
+#toolbox h3 {
+  text-align: center;
+}
+.component {
+  margin: 10px 0;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #ccc;
+  text-align: center;
+  cursor: grab;
+}
+/* Main Area (builder) */
+#builder-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+/* Updated builder controls with two rows */
+#builder-controls {
+  padding: 10px;
+  background: #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+/* Top row: Return Home, Save Config, config dropdown, Load Config */
+#builder-controls .top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+/* Bottom row: Reset, Undo, Redo, Run Simulation */
+#builder-controls .bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 5px;
+}
+#builder-controls button,
+#builder-controls select {
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+}
+/* Builder Canvas with pegboard background */
+#builder-canvas {
+  flex: 1;
+  border: 1px solid #ccc;
+  position: relative;
+  overflow: hidden;
+  background: url('assets/pegboard.png') repeat;
+}
+/* --- Simulation View --- */
+#simulation-view {
+  display: none;
+  height: 100%;
+}
+#simulation-controls {
+  padding: 10px;
+  background: #ddd;
+  text-align: center;
+}
+#simulation-controls button {
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+}
+#phaser-container {
+  height: calc(100% - 50px);
+  border: 1px solid #ccc;
+  position: relative;
+  overflow: hidden;
+}
+/* Feedback Panel (builder view) */
+#feedback {
+  width: 250px;
+  background: #fafafa;
+  border-left: 1px solid #ddd;
+  padding: 10px;
+  overflow-y: auto;
+}
+/* Dropped Component Base Style */
+.dropped-component {
+  position: absolute;
+  cursor: move;
+  user-select: none;
+}
+/* Custom shape for lever – a thin horizontal rectangle */
+.dropped-component.lever {
+  width: 100px;
+  height: 20px;
+  background-color: #e6ffe6;
+  border: 2px solid #008000;
+}
+/* Custom shape for pulley – a circle */
+.dropped-component.pulley {
+  width: 60px;
+  height: 60px;
+  background-color: #fff4e6;
+  border: 2px solid #ff8c00;
+  border-radius: 50%;
+}
+/* Custom shape for inclined-plane – a rotated rectangle */
+.dropped-component.inclined-plane {
+  width: 150px;
+  height: 30px;
+  background-color: #e6f0ff;
+  border: 2px solid #0000ff;
+  transform-origin: top left;
+}
+/* Modal Overlay Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-box {
+  background: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.25);
+  max-width: 300px;
+  width: 80%;
+}
+.modal-box h3 {
+  margin-top: 0;
+}
+.modal-box label {
+  display: block;
+  margin-top: 10px;
+}
+.modal-box input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  box-sizing: border-box;
+}
+.modal-box .modal-buttons {
+  margin-top: 10px;
+  text-align: right;
+}
+.modal-box button {
+  margin-left: 10px;
+  padding: 5px 10px;
+  cursor: pointer;
 }
