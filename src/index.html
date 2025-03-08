@@ -121,6 +121,7 @@
       cursor: pointer;
       font-size: 14px;
     }
+    /* Builder Canvas with pegboard background */
     #builder-canvas {
       flex: 1;
       border: 1px solid #ccc;
@@ -138,6 +139,7 @@
       background: #ddd;
       text-align: center;
     }
+    /* Only the Return to Builder button is shown */
     #simulation-controls button {
       padding: 8px 16px;
       cursor: pointer;
@@ -245,7 +247,8 @@
   <button class="back" id="scenario-back">Back</button>
   <h2>Choose a Scenario</h2>
   <button class="scenario-button" data-scenario="bucket">Bucket Challenge</button>
-  <button class="scenario-button" data-scenario="maze">Maze Runner</button>
+  <!-- Replaced "Maze Runner" with "Reveal a Gift" -->
+  <button class="scenario-button" data-scenario="reveal-gift">Reveal a Gift</button>
 </div>
 
 <!-- Builder Interface -->
@@ -449,11 +452,13 @@
       modeSelection.style.display = 'flex';
     });
 
+    // Back button in scenario selection screen
     document.getElementById('scenario-back').addEventListener('click', () => {
       scenarioSelection.style.display = 'none';
       modeSelection.style.display = 'flex';
     });
 
+    // Scenario button click handler
     const scenarioButtons = document.querySelectorAll('.scenario-button');
     scenarioButtons.forEach(button => {
       button.addEventListener('click', () => {
@@ -461,8 +466,8 @@
         let scenarioText = "";
         if (scenario === "bucket") {
           scenarioText = "Bucket Challenge: A marble will drop from the top left. Your goal is to guide it to the bucket at the bottom right.";
-        } else if (scenario === "maze") {
-          scenarioText = "Maze Runner: Navigate the marble through a maze of obstacles.";
+        } else if (scenario === "reveal-gift") {
+          scenarioText = "Reveal a Gift: A gift box is connected to a pulley. Your goal is to lift the box to reveal the gift.";
         }
         showPrompt(scenarioText + "\n\nPress OK to continue.", "").then(() => {
           scenarioSelection.style.display = 'none';
@@ -480,16 +485,10 @@
       saveState();
     });
     document.getElementById('undo-builder').addEventListener('click', () => {
-      if (historyIndex > 0) {
-        historyIndex--;
-        builderCanvas.innerHTML = builderHistory[historyIndex];
-      }
+      if (historyIndex > 0) { historyIndex--; builderCanvas.innerHTML = builderHistory[historyIndex]; }
     });
     document.getElementById('redo-builder').addEventListener('click', () => {
-      if (historyIndex < builderHistory.length - 1) {
-        historyIndex++;
-        builderCanvas.innerHTML = builderHistory[historyIndex];
-      }
+      if (historyIndex < builderHistory.length - 1) { historyIndex++; builderCanvas.innerHTML = builderHistory[historyIndex]; }
     });
 
     /***** Save/Load Configuration *****/
@@ -520,16 +519,10 @@
     document.getElementById('load-config').addEventListener('click', () => {
       const select = document.getElementById('config-list');
       const configName = select.value;
-      if (!configName) {
-        alert("Please select a configuration to load.");
-        return;
-      }
+      if (!configName) { alert("Please select a configuration to load."); return; }
       const savedConfigs = JSON.parse(localStorage.getItem('machineConfigs')) || {};
       const configData = savedConfigs[configName];
-      if (!configData) {
-        alert("Configuration not found.");
-        return;
-      }
+      if (!configData) { alert("Configuration not found."); return; }
       builderCanvas.innerHTML = '';
       configData.forEach(item => {
         createDroppedComponent(item.type, item.x + 40, item.y + 40, {
