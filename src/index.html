@@ -101,7 +101,7 @@
       flex-direction: column;
       gap: 5px;
     }
-    /* Top row: Return Home, Save/Load Config */
+    /* Top row: Return Home, Save Config, config dropdown, Load Config */
     #builder-controls .top-row {
       display: flex;
       align-items: center;
@@ -247,7 +247,6 @@
   <button class="back" id="scenario-back">Back</button>
   <h2>Choose a Scenario</h2>
   <button class="scenario-button" data-scenario="bucket">Bucket Challenge</button>
-  <!-- Replaced "Maze Runner" with "Reveal a Gift" -->
   <button class="scenario-button" data-scenario="reveal-gift">Reveal a Gift</button>
 </div>
 
@@ -307,7 +306,7 @@
 
 <!-- Simple Modal Prompt Function -->
 <script>
-  function showPrompt(message, defaultValue = '') {
+  function showPrompt(message, takeTextInput = true, defaultValue = '') {
     return new Promise((resolve) => {
       const overlay = document.createElement('div');
       overlay.className = 'modal-overlay';
@@ -315,36 +314,47 @@
       modalBox.className = 'modal-box';
       const messageElem = document.createElement('p');
       messageElem.innerText = message;
-      const inputElem = document.createElement('input');
-      inputElem.type = 'text';
-      inputElem.value = defaultValue;
+      let inputElem;
+      if (takeTextInput) {
+        inputElem = document.createElement('input');
+        inputElem.type = 'text';
+        inputElem.value = defaultValue;
+      }
       const buttonsDiv = document.createElement('div');
       buttonsDiv.className = 'modal-buttons';
-      const okButton = document.createElement('button');
-      okButton.innerText = 'OK';
+      const continueButton = document.createElement('button');
+      continueButton.innerText = 'Continue';
       const cancelButton = document.createElement('button');
       cancelButton.innerText = 'Cancel';
-
-      buttonsDiv.appendChild(okButton);
+      buttonsDiv.appendChild(continueButton);
       buttonsDiv.appendChild(cancelButton);
       modalBox.appendChild(messageElem);
-      modalBox.appendChild(inputElem);
+      if (takeTextInput) {
+        modalBox.appendChild(inputElem);
+      }
       modalBox.appendChild(buttonsDiv);
       overlay.appendChild(modalBox);
       document.body.appendChild(overlay);
-      inputElem.focus();
-
-      okButton.addEventListener('click', () => {
+      if (takeTextInput) {
+        inputElem.focus();
+      }
+      continueButton.addEventListener('click', () => {
         document.body.removeChild(overlay);
-        resolve(inputElem.value);
+        if (takeTextInput) {
+          resolve(inputElem.value);
+        } else {
+          resolve(true);
+        }
       });
       cancelButton.addEventListener('click', () => {
         document.body.removeChild(overlay);
-        resolve(null);
+        resolve(false);
       });
-      inputElem.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { okButton.click(); }
-      });
+      if (takeTextInput) {
+        inputElem.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { continueButton.click(); }
+        });
+      }
     });
   }
 </script>
@@ -357,11 +367,9 @@
       overlay.className = 'modal-overlay';
       const modalBox = document.createElement('div');
       modalBox.className = 'modal-box';
-
       const titleElem = document.createElement('h3');
       titleElem.innerText = title;
       modalBox.appendChild(titleElem);
-
       const form = document.createElement('form');
       fields.forEach(field => {
         const label = document.createElement('label');
@@ -374,7 +382,6 @@
         form.appendChild(input);
       });
       modalBox.appendChild(form);
-
       const buttonsDiv = document.createElement('div');
       buttonsDiv.className = 'modal-buttons';
       const okButton = document.createElement('button');
@@ -386,9 +393,7 @@
       modalBox.appendChild(buttonsDiv);
       overlay.appendChild(modalBox);
       document.body.appendChild(overlay);
-
       form.addEventListener('submit', (e) => { e.preventDefault(); okButton.click(); });
-
       okButton.addEventListener('click', () => {
         const data = {};
         const inputs = form.querySelectorAll('input');
@@ -467,14 +472,16 @@
         if (scenario === "bucket") {
           scenarioText = "Bucket Challenge: A marble will drop from the top left. Your goal is to guide it to the bucket at the bottom right.";
         } else if (scenario === "reveal-gift") {
-          scenarioText = "Reveal a Gift: A gift box is connected to a pulley. Your goal is to lift the box to reveal the gift.";
+          scenarioText = "Reveal a Gift: A gift box is connected to a pulley. Your goal is to lift the box (like a restaurant tray with a cover) to reveal the gift—a silly banana!";
         }
-        showPrompt(scenarioText + "\n\nPress OK to continue.", "").then(() => {
-          scenarioSelection.style.display = 'none';
-          builderInterface.style.display = 'block';
-          builderView.style.display = 'block';
-          simulationView.style.display = 'none';
-          updateConfigList();
+        showPrompt(scenarioText, false, "").then((response) => {
+          if (response) {
+            scenarioSelection.style.display = 'none';
+            builderInterface.style.display = 'block';
+            builderView.style.display = 'block';
+            simulationView.style.display = 'none';
+            updateConfigList();
+          }
         });
       });
     });
@@ -696,26 +703,85 @@
       this.matter.world.setBounds(0, 0, 800, 600);
       this.matter.add.rectangle(400, 590, 800, 20, { isStatic: true });
       this.add.image(400, 300, 'sky');
-      // Create static Matter bodies from builder items.
+      // Create composite/compound bodies for each builder item:
       this.configData.forEach(item => {
-        let centerX = item.x + 40;
-        let centerY = item.y + 40;
+        let centerX = item.x;
+        let centerY = item.y;
         if (item.type === 'lever') {
+          // Create a dynamic lever body (100 x 20)
+          let lever = this.matter.bodies.rectangle(centerX, centerY, 100, 20, {
+            restitution: 0,
+            friction: parseFloat(item.friction) || 0.1
+          });
+          this.matter.world.add(lever);
+          // Calculate pivot point based on pivot ratio (0 means left end, 1 means right end)
+          let pivotRatio = parseFloat(item.pivot) || 0.5;
+          // Lever's left edge = centerX - 50; so pivot X = centerX - 50 + pivotRatio*100
+          let pivotX = centerX - 50 + pivotRatio * 100;
+          let pivotY = centerY;
+          // Create a constraint that pins the lever at that pivot point.
+          let leverConstraint = this.matter.constraint.create({
+            bodyA: lever,
+            pointA: { x: -50 + pivotRatio * 100, y: 0 },
+            pointB: { x: pivotX, y: pivotY },
+            stiffness: 1,
+            length: 0
+          });
+          this.matter.world.add(leverConstraint);
+          // Set lever angle (if provided)
           let angleRad = Phaser.Math.DegToRad(parseFloat(item.angle) || 0);
-          this.matter.add.rectangle(centerX, centerY, 100, 20, { isStatic: true, angle: angleRad });
+          this.matter.body.setAngle(lever, angleRad);
         } else if (item.type === 'pulley') {
-          let r = parseFloat(item.radius) || 30;
-          this.matter.add.circle(centerX, centerY, r, { isStatic: true, friction: parseFloat(item.friction) || 0.1 });
+          // Create a pulley composite:
+          // 1. Static pulley wheel (circle) with given radius.
+          let radius = parseFloat(item.radius) || 30;
+          let pulleyWheel = this.matter.bodies.circle(centerX, centerY, radius, {
+            isStatic: true,
+            friction: parseFloat(item.friction) || 0.1
+          });
+          // 2. Dynamic bucket: a rectangle (50 x 30) below the pulley.
+          let bucket = this.matter.bodies.rectangle(centerX, centerY + radius + 50, 50, 30, {
+            restitution: 0,
+            friction: 0.1
+          });
+          // 3. Constraint simulating the rope with a default length.
+          let ropeLength = 100;
+          let pulleyConstraint = this.matter.constraint.create({
+            bodyA: pulleyWheel,
+            pointA: { x: 0, y: radius }, // bottom of the pulley wheel
+            bodyB: bucket,
+            pointB: { x: 0, y: -15 }, // top center of the bucket
+            stiffness: 0.9,
+            length: ropeLength
+          });
+          // 4. Create a composite to group the pulley system.
+          let pulleyComposite = this.matter.composite.create();
+          this.matter.composite.add(pulleyComposite, pulleyWheel);
+          this.matter.composite.add(pulleyComposite, bucket);
+          this.matter.composite.add(pulleyComposite, pulleyConstraint);
+          this.matter.world.add(pulleyComposite);
         } else if (item.type === 'inclined-plane') {
+          // Create a static inclined plane as a rectangle (150 x 30)
           let angleRad = Phaser.Math.DegToRad(parseFloat(item.angle) || 0);
-          this.matter.add.rectangle(centerX, centerY, 150, 30, { isStatic: true, friction: parseFloat(item.friction) || 0.05, angle: angleRad });
+          let plane = this.matter.bodies.rectangle(centerX, centerY, 150, 30, {
+            isStatic: true,
+            friction: parseFloat(item.friction) || 0.05,
+            angle: angleRad
+          });
+          this.matter.world.add(plane);
         } else {
-          this.matter.add.rectangle(centerX, centerY, 80, 80, { isStatic: true });
+          // Default: static box (80x80)
+          let box = this.matter.bodies.rectangle(centerX, centerY, 80, 80, { isStatic: true });
+          this.matter.world.add(box);
         }
       });
       // On pointer down, drop a dynamic marble.
       this.input.on('pointerdown', function(pointer) {
-        this.matter.add.circle(pointer.x, pointer.y, 15, { restitution: 0.8, friction: 0.005 });
+        let marble = this.matter.bodies.circle(pointer.x, pointer.y, 15, {
+          restitution: 0.8,
+          friction: 0.005
+        });
+        this.matter.world.add(marble);
       }, this);
     }
     function updateSim() { /* Update loop if needed */ }
