@@ -1,592 +1,699 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Virtual Rube Goldberg Machine Builder</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="index.css">
+    <meta charset="UTF-8"/>
+    <title>Virtual Rube Goldberg Machine Builder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="index.css">
 </head>
 <body>
 <!-- Mode Selection Screen -->
 <div id="mode-selection">
-  <h1>Virtual Rube Goldberg Machine Builder</h1>
-  <button data-mode="debug">Debug a Machine</button>
-  <button data-mode="scenario">Play Scenario</button>
-  <button data-mode="sandbox">Sandbox Mode</button>
+    <h1>Virtual Rube Goldberg Machine Builder</h1>
+    <button data-mode="debug">Debug a Machine</button>
+    <button data-mode="scenario">Play Scenario</button>
+    <button data-mode="sandbox">Sandbox Mode</button>
 </div>
 
 <!-- Scenario Selection Screen -->
 <div id="scenario-selection">
-  <button class="back" id="scenario-back">Back</button>
-  <h2>Choose a Scenario</h2>
-  <button class="scenario-button" data-scenario="bucket">Bucket Challenge</button>
-  <button class="scenario-button" data-scenario="reveal-gift">Reveal a Gift</button>
+    <button class="back" id="scenario-back">Back</button>
+    <h2>Choose a Scenario</h2>
+    <button class="scenario-button" data-scenario="bucket">Bucket Challenge</button>
+    <button class="scenario-button" data-scenario="reveal-gift">Reveal a Gift</button>
 </div>
 
 <!-- Builder Interface -->
 <div id="builder-interface">
-  <!-- Builder View -->
-  <div id="builder-view">
-    <div id="builder-controls">
-      <div class="top-row">
-        <button id="return-home">Return Home</button>
-        <div>
-          <button id="save-config">Save Config</button>
-          <select id="config-list"><option value="">--Select Config--</option></select>
-          <button id="load-config">Load Config</button>
+    <!-- Builder View -->
+    <div id="builder-view">
+        <div id="builder-controls">
+            <div class="top-row">
+                <button id="return-home">Return Home</button>
+                <div>
+                    <button id="save-config">Save Config</button>
+                    <select id="config-list">
+                        <option value="">--Select Config--</option>
+                    </select>
+                    <button id="load-config">Load Config</button>
+                </div>
+            </div>
+            <div class="bottom-row">
+                <button id="reset-builder">Reset</button>
+                <button id="undo-builder">Undo</button>
+                <button id="redo-builder">Redo</button>
+                <button id="run-simulation">Run Simulation</button>
+            </div>
         </div>
-      </div>
-      <div class="bottom-row">
-        <button id="reset-builder">Reset</button>
-        <button id="undo-builder">Undo</button>
-        <button id="redo-builder">Redo</button>
-        <button id="run-simulation">Run Simulation</button>
-      </div>
+        <div id="builder-container">
+            <!-- Toolbox Panel -->
+            <div id="toolbox">
+                <h3>Toolbox</h3>
+                <div class="component" draggable="true" data-type="lever">Lever</div>
+                <div class="component" draggable="true" data-type="pulley">Pulley</div>
+                <div class="component" draggable="true" data-type="inclined-plane">Inclined Plane</div>
+            </div>
+            <!-- Builder Canvas -->
+            <div id="builder-canvas"></div>
+            <!-- Feedback Panel -->
+            <div id="feedback">
+                <h3>Feedback</h3>
+                <p>Feedback and hints will appear here during the simulation.</p>
+                <h3>Help</h3>
+                <p>
+                    Drag items from the toolbox onto the canvas to build your machine.<br>
+                    Reposition items by dragging them.<br>
+                    Right-click an item to modify its properties.<br>
+                    Use the buttons above to save, load, reset, undo, and redo your work.<br>
+                    When you're ready, click "Run Simulation" to see your design in action!
+                </p>
+            </div>
+        </div>
     </div>
-    <div id="builder-container">
-      <!-- Toolbox Panel -->
-      <div id="toolbox">
-        <h3>Toolbox</h3>
-        <div class="component" draggable="true" data-type="lever">Lever</div>
-        <div class="component" draggable="true" data-type="pulley">Pulley</div>
-        <div class="component" draggable="true" data-type="inclined-plane">Inclined Plane</div>
-      </div>
-      <!-- Builder Canvas -->
-      <div id="builder-canvas"></div>
-      <!-- Feedback Panel -->
-      <div id="feedback">
-        <h3>Feedback</h3>
-        <p>Feedback and hints will appear here during the simulation.</p>
-        <h3>Help</h3>
-        <p>
-          Drag items from the toolbox onto the canvas to build your machine.<br>
-          Reposition items by dragging them.<br>
-          Right-click an item to modify its properties.<br>
-          Use the buttons above to save, load, reset, undo, and redo your work.<br>
-          When you're ready, click "Run Simulation" to see your design in action!
-        </p>
-      </div>
+    <!-- Simulation View -->
+    <div id="simulation-view">
+        <div id="simulation-controls">
+            <button id="return-builder">Return to Builder</button>
+        </div>
+        <div id="phaser-container"></div>
     </div>
-  </div>
-  <!-- Simulation View -->
-  <div id="simulation-view">
-    <div id="simulation-controls">
-      <button id="return-builder">Return to Builder</button>
-    </div>
-    <div id="phaser-container"></div>
-  </div>
 </div>
 
 <!-- Simple Modal Prompt Function -->
 <script>
-  function showPrompt(message, takeTextInput = true, defaultValue = '') {
-    return new Promise((resolve) => {
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      const modalBox = document.createElement('div');
-      modalBox.className = 'modal-box';
-      const messageElem = document.createElement('p');
-      messageElem.innerText = message;
-      let inputElem;
-      if (takeTextInput) {
-        inputElem = document.createElement('input');
-        inputElem.type = 'text';
-        inputElem.value = defaultValue;
-      }
-      const buttonsDiv = document.createElement('div');
-      buttonsDiv.className = 'modal-buttons';
-      const continueButton = document.createElement('button');
-      continueButton.innerText = 'Continue';
-      const cancelButton = document.createElement('button');
-      cancelButton.innerText = 'Cancel';
-      buttonsDiv.appendChild(continueButton);
-      buttonsDiv.appendChild(cancelButton);
-      modalBox.appendChild(messageElem);
-      if (takeTextInput) {
-        modalBox.appendChild(inputElem);
-      }
-      modalBox.appendChild(buttonsDiv);
-      overlay.appendChild(modalBox);
-      document.body.appendChild(overlay);
-      if (takeTextInput) {
-        inputElem.focus();
-      }
-      continueButton.addEventListener('click', () => {
-        document.body.removeChild(overlay);
-        if (takeTextInput) {
-          resolve(inputElem.value);
-        } else {
-          resolve(true);
-        }
-      });
-      cancelButton.addEventListener('click', () => {
-        document.body.removeChild(overlay);
-        resolve(false);
-      });
-      if (takeTextInput) {
-        inputElem.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') { continueButton.click(); }
+    function showPrompt(message, takeTextInput = true, defaultValue = '') {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            const modalBox = document.createElement('div');
+            modalBox.className = 'modal-box';
+            const messageElem = document.createElement('p');
+            messageElem.innerText = message;
+            let inputElem;
+            if (takeTextInput) {
+                inputElem = document.createElement('input');
+                inputElem.type = 'text';
+                inputElem.value = defaultValue;
+            }
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.className = 'modal-buttons';
+            const continueButton = document.createElement('button');
+            continueButton.innerText = 'Continue';
+            const cancelButton = document.createElement('button');
+            cancelButton.innerText = 'Cancel';
+            buttonsDiv.appendChild(continueButton);
+            buttonsDiv.appendChild(cancelButton);
+            modalBox.appendChild(messageElem);
+            if (takeTextInput) {
+                modalBox.appendChild(inputElem);
+            }
+            modalBox.appendChild(buttonsDiv);
+            overlay.appendChild(modalBox);
+            document.body.appendChild(overlay);
+            if (takeTextInput) {
+                inputElem.focus();
+            }
+            continueButton.addEventListener('click', () => {
+                document.body.removeChild(overlay);
+                if (takeTextInput) {
+                    resolve(inputElem.value);
+                } else {
+                    resolve(true);
+                }
+            });
+            cancelButton.addEventListener('click', () => {
+                document.body.removeChild(overlay);
+                resolve(false);
+            });
+            if (takeTextInput) {
+                inputElem.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        continueButton.click();
+                    }
+                });
+            }
         });
-      }
-    });
-  }
+    }
 </script>
 
 <!-- Custom Properties Dialog Function -->
 <script>
-  function showPropertiesDialog(title, fields) {
-    return new Promise((resolve) => {
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      const modalBox = document.createElement('div');
-      modalBox.className = 'modal-box';
-      const titleElem = document.createElement('h3');
-      titleElem.innerText = title;
-      modalBox.appendChild(titleElem);
-      const form = document.createElement('form');
-      fields.forEach(field => {
-        const label = document.createElement('label');
-        label.innerText = field.label;
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.name = field.name;
-        input.value = field.value;
-        form.appendChild(label);
-        form.appendChild(input);
-      });
-      modalBox.appendChild(form);
-      const buttonsDiv = document.createElement('div');
-      buttonsDiv.className = 'modal-buttons';
-      const okButton = document.createElement('button');
-      okButton.innerText = 'OK';
-      const cancelButton = document.createElement('button');
-      cancelButton.innerText = 'Cancel';
-      buttonsDiv.appendChild(okButton);
-      buttonsDiv.appendChild(cancelButton);
-      modalBox.appendChild(buttonsDiv);
-      overlay.appendChild(modalBox);
-      document.body.appendChild(overlay);
-      form.addEventListener('submit', (e) => { e.preventDefault(); okButton.click(); });
-      okButton.addEventListener('click', () => {
-        const data = {};
-        const inputs = form.querySelectorAll('input');
-        inputs.forEach(input => { data[input.name] = input.value; });
-        document.body.removeChild(overlay);
-        resolve(data);
-      });
-      cancelButton.addEventListener('click', () => {
-        document.body.removeChild(overlay);
-        resolve(null);
-      });
-    });
-  }
+    function showPropertiesDialog(title, fields) {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            const modalBox = document.createElement('div');
+            modalBox.className = 'modal-box';
+            const titleElem = document.createElement('h3');
+            titleElem.innerText = title;
+            modalBox.appendChild(titleElem);
+            const form = document.createElement('form');
+            fields.forEach(field => {
+                const label = document.createElement('label');
+                label.innerText = field.label;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.name = field.name;
+                input.value = field.value;
+                form.appendChild(label);
+                form.appendChild(input);
+            });
+            modalBox.appendChild(form);
+            const buttonsDiv = document.createElement('div');
+            buttonsDiv.className = 'modal-buttons';
+            const okButton = document.createElement('button');
+            okButton.innerText = 'OK';
+            const cancelButton = document.createElement('button');
+            cancelButton.innerText = 'Cancel';
+            buttonsDiv.appendChild(okButton);
+            buttonsDiv.appendChild(cancelButton);
+            modalBox.appendChild(buttonsDiv);
+            overlay.appendChild(modalBox);
+            document.body.appendChild(overlay);
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                okButton.click();
+            });
+            okButton.addEventListener('click', () => {
+                const data = {};
+                const inputs = form.querySelectorAll('input');
+                inputs.forEach(input => {
+                    data[input.name] = input.value;
+                });
+                document.body.removeChild(overlay);
+                resolve(data);
+            });
+            cancelButton.addEventListener('click', () => {
+                document.body.removeChild(overlay);
+                resolve(null);
+            });
+        });
+    }
 </script>
 
 <!-- Main Application Script -->
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    console.log("DOM fully loaded and parsed.");
-    const Phaser = require('phaser');
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log("DOM fully loaded and parsed.");
+        const Phaser = require('phaser');
 
-    /***** Global Variables for Undo/Redo *****/
-    let builderHistory = [];
-    let historyIndex = -1;
-    const builderCanvas = document.getElementById('builder-canvas');
-    function saveState() {
-      builderHistory = builderHistory.slice(0, historyIndex + 1);
-      builderHistory.push(builderCanvas.innerHTML);
-      historyIndex++;
-    }
-    saveState();
+        /***** Global Variables for Undo/Redo *****/
+        let builderHistory = [];
+        let historyIndex = -1;
+        const builderCanvas = document.getElementById('builder-canvas');
 
-    /***** Screen Toggle *****/
-    const modeSelection = document.getElementById('mode-selection');
-    const scenarioSelection = document.getElementById('scenario-selection');
-    const builderInterface = document.getElementById('builder-interface');
-    const builderView = document.getElementById('builder-view');
-    const simulationView = document.getElementById('simulation-view');
-    const modeButtons = document.querySelectorAll('#mode-selection button');
-    modeButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const mode = button.getAttribute('data-mode');
-        if (mode === "scenario") {
-          modeSelection.style.display = 'none';
-          scenarioSelection.style.display = 'flex';
-        } else {
-          modeSelection.style.display = 'none';
-          builderInterface.style.display = 'block';
-          builderView.style.display = 'block';
-          simulationView.style.display = 'none';
-          updateConfigList();
+        /***** Global Variables *****/
+        const leverLeftOffset = 50;
+        const leverTopOffset = 10;
+        const pulleyLeftOffset = 30;
+        const pulleyTopOffset = 30;
+        const inclinedPlaneLeftOffset = 75;
+        const inclinedPlaneTopOffset = 15;
+        const defaultLeftOffset = 40;
+        const defaultTopOffset = 40;
+
+        function saveState() {
+            builderHistory = builderHistory.slice(0, historyIndex + 1);
+            builderHistory.push(builderCanvas.innerHTML);
+            historyIndex++;
         }
-      });
-    });
-    document.getElementById('return-home').addEventListener('click', () => {
-      builderCanvas.innerHTML = '';
-      builderHistory = [];
-      historyIndex = -1;
-      saveState();
-      builderInterface.style.display = 'none';
-      modeSelection.style.display = 'flex';
-    });
 
-    // Back button in scenario selection screen
-    document.getElementById('scenario-back').addEventListener('click', () => {
-      scenarioSelection.style.display = 'none';
-      modeSelection.style.display = 'flex';
-    });
+        saveState();
 
-    // Scenario button click handler
-    const scenarioButtons = document.querySelectorAll('.scenario-button');
-    scenarioButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        const scenario = button.getAttribute('data-scenario');
-        let scenarioText = "";
-        if (scenario === "bucket") {
-          scenarioText = "Bucket Challenge: A marble will drop from the top left. Your goal is to guide it to the bucket at the bottom right.";
-        } else if (scenario === "reveal-gift") {
-          scenarioText = "Reveal a Gift: A gift box is connected to a pulley. Your goal is to lift the box (like a restaurant tray with a cover) to reveal the gift—a silly banana!";
-        }
-        showPrompt(scenarioText, false, "").then((response) => {
-          if (response) {
+        /***** Screen Toggle *****/
+        const modeSelection = document.getElementById('mode-selection');
+        const scenarioSelection = document.getElementById('scenario-selection');
+        const builderInterface = document.getElementById('builder-interface');
+        const builderView = document.getElementById('builder-view');
+        const simulationView = document.getElementById('simulation-view');
+        const modeButtons = document.querySelectorAll('#mode-selection button');
+        modeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const mode = button.getAttribute('data-mode');
+                if (mode === "scenario") {
+                    modeSelection.style.display = 'none';
+                    scenarioSelection.style.display = 'flex';
+                } else {
+                    modeSelection.style.display = 'none';
+                    builderInterface.style.display = 'block';
+                    builderView.style.display = 'block';
+                    simulationView.style.display = 'none';
+                    updateConfigList();
+                }
+            });
+        });
+        document.getElementById('return-home').addEventListener('click', () => {
+            builderCanvas.innerHTML = '';
+            builderHistory = [];
+            historyIndex = -1;
+            saveState();
+            builderInterface.style.display = 'none';
+            modeSelection.style.display = 'flex';
+        });
+
+        // Back button in scenario selection screen
+        document.getElementById('scenario-back').addEventListener('click', () => {
             scenarioSelection.style.display = 'none';
-            builderInterface.style.display = 'block';
-            builderView.style.display = 'block';
+            modeSelection.style.display = 'flex';
+        });
+
+        // Scenario button click handler
+        const scenarioButtons = document.querySelectorAll('.scenario-button');
+        scenarioButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const scenario = button.getAttribute('data-scenario');
+                let scenarioText = "";
+                if (scenario === "bucket") {
+                    scenarioText = "Bucket Challenge: A marble will drop from the top left. Your goal is to guide it to the bucket at the bottom right.";
+                } else if (scenario === "reveal-gift") {
+                    scenarioText = "Reveal a Gift: A gift box is connected to a pulley. Your goal is to lift the box (like a restaurant tray with a cover) to reveal the gift—a silly banana!";
+                }
+                showPrompt(scenarioText, false, "").then((response) => {
+                    if (response) {
+                        scenarioSelection.style.display = 'none';
+                        builderInterface.style.display = 'block';
+                        builderView.style.display = 'block';
+                        simulationView.style.display = 'none';
+                        updateConfigList();
+                    }
+                });
+            });
+        });
+
+        /***** Builder Controls *****/
+        document.getElementById('reset-builder').addEventListener('click', () => {
+            builderCanvas.innerHTML = '';
+            saveState();
+        });
+        document.getElementById('undo-builder').addEventListener('click', () => {
+            if (historyIndex > 0) {
+                historyIndex--;
+                builderCanvas.innerHTML = builderHistory[historyIndex];
+            }
+        });
+        document.getElementById('redo-builder').addEventListener('click', () => {
+            if (historyIndex < builderHistory.length - 1) {
+                historyIndex++;
+                builderCanvas.innerHTML = builderHistory[historyIndex];
+            }
+        });
+
+        /***** Save/Load Configuration *****/
+        document.getElementById('save-config').addEventListener('click', () => {
+            showPrompt("Enter a name for this configuration:").then(configName => {
+                if (!configName) return;
+                const configData = [];
+                const comps = builderCanvas.querySelectorAll('.dropped-component');
+                comps.forEach(comp => {
+                    configData.push({
+                        type: comp.dataset.type,
+                        x: parseInt(comp.style.left),
+                        y: parseInt(comp.style.top),
+                        angle: comp.dataset.angle,
+                        friction: comp.dataset.friction,
+                        fulcrum: comp.dataset.fulcrum,
+                        pivot: comp.dataset.pivot,
+                        radius: comp.dataset.radius
+                    });
+                });
+                let savedConfigs = JSON.parse(localStorage.getItem('machineConfigs')) || {};
+                savedConfigs[configName] = configData;
+                localStorage.setItem('machineConfigs', JSON.stringify(savedConfigs));
+                alert("Configuration saved!");
+                updateConfigList();
+            });
+        });
+        document.getElementById('load-config').addEventListener('click', () => {
+            const select = document.getElementById('config-list');
+            const configName = select.value;
+            if (!configName) {
+                alert("Please select a configuration to load.");
+                return;
+            }
+            const savedConfigs = JSON.parse(localStorage.getItem('machineConfigs')) || {};
+            const configData = savedConfigs[configName];
+            if (!configData) {
+                alert("Configuration not found.");
+                return;
+            }
+            builderCanvas.innerHTML = '';
+            configData.forEach(item => {
+                createDroppedComponent(item.type, item.x, item.y, {
+                    angle: item.angle,
+                    friction: item.friction,
+                    fulcrum: item.fulcrum,
+                    pivot: item.pivot,
+                    radius: item.radius
+                });
+            });
+            saveState();
+            alert("Configuration loaded!");
+        });
+
+        function updateConfigList() {
+            const select = document.getElementById('config-list');
+            select.innerHTML = '<option value="">--Select Config--</option>';
+            const savedConfigs = JSON.parse(localStorage.getItem('machineConfigs')) || {};
+            Object.keys(savedConfigs).forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.innerText = name;
+                select.appendChild(option);
+            });
+        }
+
+        /***** Basic Drag and Drop for Toolbox Components *****/
+        const components = document.querySelectorAll('.component');
+        components.forEach(component => {
+            component.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', component.getAttribute('data-type'));
+            });
+        });
+        builderCanvas.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+        builderCanvas.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const componentType = e.dataTransfer.getData('text/plain');
+            const rect = builderCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            createDroppedComponent(componentType, x, y);
+            saveState();
+        });
+
+        // create a draggable builder element using custom shapes.
+        function createDroppedComponent(componentType, x, y, properties = {}) {
+            const newComponent = document.createElement('div');
+            newComponent.className = 'dropped-component ' + componentType;
+            if (componentType === 'lever') {
+                newComponent.style.width = '100px';
+                newComponent.style.height = '20px';
+                newComponent.style.left = `${x - leverLeftOffset}px`;
+                newComponent.style.top = `${y - leverTopOffset}px`;
+            } else if (componentType === 'pulley') {
+                newComponent.style.width = '60px';
+                newComponent.style.height = '60px';
+                newComponent.style.left = `${x - pulleyLeftOffset}px`;
+                newComponent.style.top = `${y - pulleyTopOffset}px`;
+            } else if (componentType === 'inclined-plane') {
+                newComponent.style.width = '150px';
+                newComponent.style.height = '30px';
+                newComponent.style.left = `${x - inclinedPlaneLeftOffset}px`;
+                newComponent.style.top = `${y - inclinedPlaneTopOffset}px`;
+                newComponent.dataset.angle = properties.angle || '0';
+                newComponent.style.transform = `rotate(${newComponent.dataset.angle}deg)`;
+            } else {
+                newComponent.style.left = `${x - defaultLeftOffset}px`;
+                newComponent.style.top = `${y - defaultTopOffset}px`;
+            }
+            newComponent.dataset.type = componentType;
+            newComponent.dataset.angle = properties.angle || '0';
+            if (componentType === 'inclined-plane' && !properties.friction) {
+                properties.friction = '0.05';
+            }
+            if (componentType === 'pulley' && !properties.friction) {
+                properties.friction = '0.1';
+            }
+            newComponent.dataset.friction = properties.friction || '';
+
+            if (componentType === 'lever') {
+                newComponent.dataset.fulcrum = properties.fulcrum || 'center';
+                newComponent.dataset.pivot = properties.pivot || '0.5';
+            }
+            if (componentType === 'pulley') {
+                newComponent.dataset.radius = properties.radius || '30';
+            }
+
+            newComponent.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+                if (newComponent.dataset.type === 'inclined-plane') {
+                    const fields = [
+                        {name: 'angle', label: 'Angle (degrees):', value: newComponent.dataset.angle},
+                        {name: 'friction', label: 'Friction coefficient:', value: newComponent.dataset.friction}
+                    ];
+                    showPropertiesDialog('Edit Inclined Plane Properties', fields).then(data => {
+                        if (data !== null) {
+                            newComponent.dataset.angle = data.angle;
+                            newComponent.dataset.friction = data.friction;
+                            newComponent.style.transform = `rotate(${data.angle}deg)`;
+                        }
+                    });
+                } else if (newComponent.dataset.type === 'lever') {
+                    const fields = [
+                        {name: 'fulcrum', label: 'Fulcrum (left, center, right):', value: newComponent.dataset.fulcrum},
+                    ];
+                    showPropertiesDialog('Edit Lever Properties', fields).then(data => {
+                        if (data !== null) {
+                            newComponent.dataset.fulcrum = data.fulcrum;
+                        }
+                    });
+                } else if (newComponent.dataset.type === 'pulley') {
+                    const fields = [
+                        {name: 'radius', label: 'Radius:', value: newComponent.dataset.radius},
+                        {name: 'friction', label: 'Friction coefficient:', value: newComponent.dataset.friction}
+                    ];
+                    showPropertiesDialog('Edit Pulley Properties', fields).then(data => {
+                        if (data !== null) {
+                            newComponent.dataset.radius = data.radius;
+                            newComponent.dataset.friction = data.friction;
+                        }
+                    });
+                }
+            });
+
+            newComponent.addEventListener('mousedown', (event) => {
+                if (event.button !== 0) return;
+                const offsetX = event.clientX - newComponent.offsetLeft;
+                const offsetY = event.clientY - newComponent.offsetTop;
+
+                function mouseMoveHandler(e) {
+                    newComponent.style.left = e.clientX - offsetX + 'px';
+                    newComponent.style.top = e.clientY - offsetY + 'px';
+                }
+
+                function mouseUpHandler() {
+                    document.removeEventListener('mousemove', mouseMoveHandler);
+                    document.removeEventListener('mouseup', mouseUpHandler);
+                    saveState();
+                }
+
+                document.addEventListener('mousemove', mouseMoveHandler);
+                document.addEventListener('mouseup', mouseUpHandler);
+            });
+            builderCanvas.appendChild(newComponent);
+        }
+
+        /***** Simulation Setup (using Matter.js) *****/
+        let game;
+        let simConfig;
+
+        function createSimulation(configData) {
+            simConfig = {
+                type: Phaser.AUTO,
+                parent: 'phaser-container',
+                width: 800,
+                height: 600,
+                physics: {
+                    default: 'matter',
+                    matter: {
+                        gravity: {y: 1},
+                        debug: true
+                    }
+                },
+                scene: {
+                    init: function () {
+                        this.configData = configData;
+                        this.levers = [];
+                    },
+                    preload: preloadSim,
+                    create: createSim,
+                    update: updateSim
+                }
+            };
+            game = new Phaser.Game(simConfig);
+        }
+
+        function preloadSim() {
+            this.load.image('sky', 'https://labs.phaser.io/assets/skies/sky4.png');
+        }
+
+        function createSim() {
+            // Set world bounds and add an invisible floor.
+            this.matter.world.setBounds(0, 0, 800, 600);
+            // this.matter.add.rectangle(400, 590, 800, 20, {isStatic: true});
+            this.add.image(400, 300, 'sky');
+            // Create composite/compound bodies for each builder item:
+            this.configData.forEach(item => {
+                let centerX = item.x;
+                let centerY = item.y;
+                if (item.type === 'lever') {
+                    let pivotRatio;
+                    switch (item.fulcrum) {
+                        case 'left':
+                            pivotRatio = 0.25
+                            break;
+                        case 'right':
+                            pivotRatio = 0.75;
+                            break;
+                        case 'center':
+                        default:
+                            pivotRatio = 0.5;
+                    }
+
+                    // Create dynamic lever body.
+                    let lever = this.matter.bodies.rectangle(centerX, centerY, 100, 20, {
+                        restitution: 0,
+                        friction: parseFloat(item.friction) || 0.1
+                    });
+                    // Create static fulcrum triangle at pivot location.
+                    let pivotX = centerX - 50 + pivotRatio * 100;
+                    let pivotY = centerY + 20;
+                    let fulcrum = this.matter.bodies.polygon(pivotX, pivotY, 3, 10, {
+                        isStatic: true,
+                        angle: Phaser.Math.DegToRad(208)
+                    });
+
+                    // Create a constraint that pins the lever at its pivot.
+                    let leverConstraint = this.matter.constraint.create({
+                        bodyA: lever,
+                        pointA: {x: -50 + pivotRatio * 100, y: 0},
+                        pointB: {x: pivotX, y: pivotY - 20},
+                        stiffness: 1,
+                        length: 0
+                    });
+                    // Create a composite for the lever.
+                    let leverComposite = this.matter.composite.create();
+                    this.matter.composite.add(leverComposite, lever);
+                    this.matter.composite.add(leverComposite, fulcrum);
+                    this.matter.composite.add(leverComposite, leverConstraint);
+                    this.matter.world.add(leverComposite);
+                    // Save lever for angle clamping.
+                    let minAngle = Phaser.Math.DegToRad(parseFloat(item.minAngle) || -30);
+                    let maxAngle = Phaser.Math.DegToRad(parseFloat(item.maxAngle) || 30);
+                    this.levers.push({body: lever, min: minAngle, max: maxAngle});
+                } else if (item.type === 'pulley') {
+                    // Create a pulley composite:
+                    // 1. Static pulley wheel (circle) with given radius.
+                    let radius = parseFloat(item.radius) || 30;
+                    let pulleyWheel = this.matter.bodies.circle(centerX, centerY, radius, {
+                        isStatic: true,
+                        friction: parseFloat(item.friction) || 0.1
+                    });
+                    // 2. Dynamic bucket: a rectangle (50 x 30) below the pulley.
+                    let bucket = this.matter.bodies.rectangle(centerX, centerY + radius + 50, 50, 30, {
+                        restitution: 0,
+                        friction: 0.1
+                    });
+                    // 3. Constraint simulating the rope with a default length.
+                    let ropeLength = 100;
+                    let pulleyConstraint = this.matter.constraint.create({
+                        bodyA: pulleyWheel,
+                        pointA: {x: 0, y: radius}, // bottom of the pulley wheel
+                        bodyB: bucket,
+                        pointB: {x: 0, y: -15}, // top center of the bucket
+                        stiffness: 0.9,
+                        length: ropeLength
+                    });
+                    // 4. Create a composite to group the pulley system.
+                    let pulleyComposite = this.matter.composite.create();
+                    this.matter.composite.add(pulleyComposite, pulleyWheel);
+                    this.matter.composite.add(pulleyComposite, bucket);
+                    this.matter.composite.add(pulleyComposite, pulleyConstraint);
+                    this.matter.world.add(pulleyComposite);
+                } else if (item.type === 'inclined-plane') {
+                    centerX = centerX - inclinedPlaneLeftOffset;
+                    centerY = centerY - inclinedPlaneTopOffset;
+
+                    // Create a static inclined plane as a rectangle (150 x 30)
+                    let angleRad = Phaser.Math.DegToRad(parseFloat(item.angle) || 0);
+                    let plane = this.matter.bodies.rectangle(centerX, centerY, 150, 30, {
+                        isStatic: true,
+                        friction: parseFloat(item.friction) || 0.05,
+                        angle: angleRad
+                    });
+                    this.matter.world.add(plane);
+                } else {
+                    // Default: static box (80x80)
+                    let box = this.matter.bodies.rectangle(centerX, centerY, 80, 80, {isStatic: true});
+                    this.matter.world.add(box);
+                }
+            });
+            // On pointer down, drop a dynamic marble.
+            this.input.on('pointerdown', function (pointer) {
+                let marble = this.matter.bodies.circle(pointer.x, pointer.y, 15, {
+                    restitution: 0.8,
+                    friction: 0.005
+                });
+                this.matter.world.add(marble);
+            }, this);
+        }
+
+        function updateSim() {
+            // Clamp lever angles within limits.
+            if (this.levers) {
+                this.levers.forEach(({body, min, max}) => {
+                    if (body.angle < min) {
+                        this.matter.body.setAngle(body, min);
+                        this.matter.body.setAngularVelocity(body, 0);
+                    }
+                    if (body.angle > max) {
+                        this.matter.body.setAngle(body, max);
+                        this.matter.body.setAngularVelocity(body, 0);
+                    }
+                });
+            }
+        }
+
+        /***** Transition to Simulation Mode *****/
+        document.getElementById('run-simulation').addEventListener('click', () => {
+            builderView.style.display = 'none';
+            simulationView.style.display = 'block';
+            const configData = [];
+            const comps = builderCanvas.querySelectorAll('.dropped-component');
+            comps.forEach(comp => {
+                const type = comp.dataset.type;
+                let x;
+                let y;
+
+                if (type === 'lever') {
+                    x = parseInt(comp.style.left) + leverLeftOffset;
+                    y = parseInt(comp.style.top) + leverTopOffset;
+                } else if (type === 'pulley') {
+                    x = parseInt(comp.style.left) + pulleyLeftOffset;
+                    y = parseInt(comp.style.top) + pulleyTopOffset;
+                } else if (type === 'inclined-plane') {
+                    x = parseInt(comp.style.left) + inclinedPlaneLeftOffset;
+                    y = parseInt(comp.style.top) + inclinedPlaneTopOffset;
+                } else {
+                    x = parseInt(comp.style.left) + defaultLeftOffset;
+                    y = parseInt(comp.style.top) + defaultTopOffset;
+                }
+
+                configData.push({
+                    type,
+                    x,
+                    y,
+                    angle: comp.dataset.angle,
+                    friction: comp.dataset.friction,
+                    fulcrum: comp.dataset.fulcrum,
+                    pivot: comp.dataset.pivot,
+                    radius: comp.dataset.radius
+                });
+            });
+            createSimulation(configData);
+        });
+
+        /***** Simulation Controls *****/
+        document.getElementById('return-builder').addEventListener('click', () => {
+            if (game) {
+                game.destroy(true);
+                game = null;
+            }
             simulationView.style.display = 'none';
-            updateConfigList();
-          }
+            builderView.style.display = 'block';
         });
-      });
     });
-
-    /***** Builder Controls *****/
-    document.getElementById('reset-builder').addEventListener('click', () => {
-      builderCanvas.innerHTML = '';
-      saveState();
-    });
-    document.getElementById('undo-builder').addEventListener('click', () => {
-      if (historyIndex > 0) { historyIndex--; builderCanvas.innerHTML = builderHistory[historyIndex]; }
-    });
-    document.getElementById('redo-builder').addEventListener('click', () => {
-      if (historyIndex < builderHistory.length - 1) { historyIndex++; builderCanvas.innerHTML = builderHistory[historyIndex]; }
-    });
-
-    /***** Save/Load Configuration *****/
-    document.getElementById('save-config').addEventListener('click', () => {
-      showPrompt("Enter a name for this configuration:").then(configName => {
-        if (!configName) return;
-        const configData = [];
-        const comps = builderCanvas.querySelectorAll('.dropped-component');
-        comps.forEach(comp => {
-          configData.push({
-            type: comp.dataset.type,
-            x: parseInt(comp.style.left, 10),
-            y: parseInt(comp.style.top, 10),
-            angle: comp.dataset.angle,
-            friction: comp.dataset.friction,
-            fulcrum: comp.dataset.fulcrum,
-            pivot: comp.dataset.pivot,
-            radius: comp.dataset.radius
-          });
-        });
-        let savedConfigs = JSON.parse(localStorage.getItem('machineConfigs')) || {};
-        savedConfigs[configName] = configData;
-        localStorage.setItem('machineConfigs', JSON.stringify(savedConfigs));
-        alert("Configuration saved!");
-        updateConfigList();
-      });
-    });
-    document.getElementById('load-config').addEventListener('click', () => {
-      const select = document.getElementById('config-list');
-      const configName = select.value;
-      if (!configName) { alert("Please select a configuration to load."); return; }
-      const savedConfigs = JSON.parse(localStorage.getItem('machineConfigs')) || {};
-      const configData = savedConfigs[configName];
-      if (!configData) { alert("Configuration not found."); return; }
-      builderCanvas.innerHTML = '';
-      configData.forEach(item => {
-        createDroppedComponent(item.type, item.x + 40, item.y + 40, {
-          angle: item.angle,
-          friction: item.friction,
-          fulcrum: item.fulcrum,
-          pivot: item.pivot,
-          radius: item.radius
-        });
-      });
-      saveState();
-      alert("Configuration loaded!");
-    });
-    function updateConfigList() {
-      const select = document.getElementById('config-list');
-      select.innerHTML = '<option value="">--Select Config--</option>';
-      const savedConfigs = JSON.parse(localStorage.getItem('machineConfigs')) || {};
-      Object.keys(savedConfigs).forEach(name => {
-        const option = document.createElement('option');
-        option.value = name;
-        option.innerText = name;
-        select.appendChild(option);
-      });
-    }
-
-    /***** Basic Drag and Drop for Toolbox Components *****/
-    const components = document.querySelectorAll('.component');
-    components.forEach(component => {
-      component.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', component.getAttribute('data-type'));
-      });
-    });
-    builderCanvas.addEventListener('dragover', (e) => { e.preventDefault(); });
-    builderCanvas.addEventListener('drop', (e) => {
-      e.preventDefault();
-      const componentType = e.dataTransfer.getData('text/plain');
-      const rect = builderCanvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      createDroppedComponent(componentType, x, y);
-      saveState();
-    });
-
-    // createDroppedComponent: creates a draggable builder element using custom shapes.
-    function createDroppedComponent(componentType, x, y, properties = {}) {
-      const newComponent = document.createElement('div');
-      newComponent.className = 'dropped-component ' + componentType;
-      if (componentType === 'lever') {
-        newComponent.style.width = '100px';
-        newComponent.style.height = '20px';
-        newComponent.style.left = `${x - 50}px`;
-        newComponent.style.top = `${y - 10}px`;
-      } else if (componentType === 'pulley') {
-        newComponent.style.width = '60px';
-        newComponent.style.height = '60px';
-        newComponent.style.left = `${x - 30}px`;
-        newComponent.style.top = `${y - 30}px`;
-      } else if (componentType === 'inclined-plane') {
-        newComponent.style.width = '150px';
-        newComponent.style.height = '30px';
-        newComponent.style.left = `${x - 75}px`;
-        newComponent.style.top = `${y - 15}px`;
-        newComponent.dataset.angle = properties.angle || '0';
-        newComponent.style.transform = `rotate(${newComponent.dataset.angle}deg)`;
-      } else {
-        newComponent.style.left = `${x - 40}px`;
-        newComponent.style.top = `${y - 40}px`;
-      }
-      newComponent.dataset.type = componentType;
-      newComponent.dataset.angle = properties.angle || '0';
-      if (componentType === 'inclined-plane' && !properties.friction) { properties.friction = '0.05'; }
-      if (componentType === 'pulley' && !properties.friction) { properties.friction = '0.1'; }
-      newComponent.dataset.friction = properties.friction || '';
-
-      if (componentType === 'lever') {
-        newComponent.dataset.fulcrum = properties.fulcrum || 'center';
-        newComponent.dataset.pivot = properties.pivot || '0.5';
-      }
-      if (componentType === 'pulley') {
-        newComponent.dataset.radius = properties.radius || '30';
-      }
-
-      newComponent.addEventListener('contextmenu', (event) => {
-        event.preventDefault();
-        if (newComponent.dataset.type === 'inclined-plane') {
-          const fields = [
-            { name: 'angle', label: 'Angle (degrees):', value: newComponent.dataset.angle },
-            { name: 'friction', label: 'Friction coefficient:', value: newComponent.dataset.friction }
-          ];
-          showPropertiesDialog('Edit Inclined Plane Properties', fields).then(data => {
-            if (data !== null) {
-              newComponent.dataset.angle = data.angle;
-              newComponent.dataset.friction = data.friction;
-              newComponent.style.transform = `rotate(${data.angle}deg)`;
-            }
-          });
-        } else if (newComponent.dataset.type === 'lever') {
-          const fields = [
-            { name: 'fulcrum', label: 'Fulcrum (left, center, right):', value: newComponent.dataset.fulcrum },
-            { name: 'pivot', label: 'Pivot ratio (0-1):', value: newComponent.dataset.pivot }
-          ];
-          showPropertiesDialog('Edit Lever Properties', fields).then(data => {
-            if (data !== null) {
-              newComponent.dataset.fulcrum = data.fulcrum;
-              newComponent.dataset.pivot = data.pivot;
-            }
-          });
-        } else if (newComponent.dataset.type === 'pulley') {
-          const fields = [
-            { name: 'radius', label: 'Radius:', value: newComponent.dataset.radius },
-            { name: 'friction', label: 'Friction coefficient:', value: newComponent.dataset.friction }
-          ];
-          showPropertiesDialog('Edit Pulley Properties', fields).then(data => {
-            if (data !== null) {
-              newComponent.dataset.radius = data.radius;
-              newComponent.dataset.friction = data.friction;
-            }
-          });
-        }
-      });
-
-      newComponent.addEventListener('mousedown', (event) => {
-        if (event.button !== 0) return;
-        const offsetX = event.clientX - newComponent.offsetLeft;
-        const offsetY = event.clientY - newComponent.offsetTop;
-        function mouseMoveHandler(e) {
-          newComponent.style.left = e.clientX - offsetX + 'px';
-          newComponent.style.top = e.clientY - offsetY + 'px';
-        }
-        function mouseUpHandler() {
-          document.removeEventListener('mousemove', mouseMoveHandler);
-          document.removeEventListener('mouseup', mouseUpHandler);
-          saveState();
-        }
-        document.addEventListener('mousemove', mouseMoveHandler);
-        document.addEventListener('mouseup', mouseUpHandler);
-      });
-      builderCanvas.appendChild(newComponent);
-    }
-
-    /***** Simulation Setup (using Matter.js) *****/
-    let game;
-    let simConfig;
-    function createSimulation(configData) {
-      simConfig = {
-        type: Phaser.AUTO,
-        parent: 'phaser-container',
-        width: 800,
-        height: 600,
-        physics: {
-          default: 'matter',
-          matter: {
-            gravity: { y: 1 },
-            debug: true
-          }
-        },
-        scene: {
-          init: function() { this.configData = configData; },
-          preload: preloadSim,
-          create: createSim,
-          update: updateSim
-        }
-      };
-      game = new Phaser.Game(simConfig);
-    }
-    function preloadSim() {
-      this.load.image('sky', 'https://labs.phaser.io/assets/skies/sky4.png');
-    }
-    function createSim() {
-      // Set world bounds and add an invisible floor.
-      this.matter.world.setBounds(0, 0, 800, 600);
-      this.matter.add.rectangle(400, 590, 800, 20, { isStatic: true });
-      this.add.image(400, 300, 'sky');
-      // Create composite/compound bodies for each builder item:
-      this.configData.forEach(item => {
-        let centerX = item.x;
-        let centerY = item.y;
-        if (item.type === 'lever') {
-          // Create a dynamic lever body (100 x 20)
-          let lever = this.matter.bodies.rectangle(centerX, centerY, 100, 20, {
-            restitution: 0,
-            friction: parseFloat(item.friction) || 0.1
-          });
-          this.matter.world.add(lever);
-          // Calculate pivot point based on pivot ratio (0 means left end, 1 means right end)
-          let pivotRatio = parseFloat(item.pivot) || 0.5;
-          // Lever's left edge = centerX - 50; so pivot X = centerX - 50 + pivotRatio*100
-          let pivotX = centerX - 50 + pivotRatio * 100;
-          let pivotY = centerY;
-          // Create a constraint that pins the lever at that pivot point.
-          let leverConstraint = this.matter.constraint.create({
-            bodyA: lever,
-            pointA: { x: -50 + pivotRatio * 100, y: 0 },
-            pointB: { x: pivotX, y: pivotY },
-            stiffness: 1,
-            length: 0
-          });
-          this.matter.world.add(leverConstraint);
-          // Set lever angle (if provided)
-          let angleRad = Phaser.Math.DegToRad(parseFloat(item.angle) || 0);
-          this.matter.body.setAngle(lever, angleRad);
-        } else if (item.type === 'pulley') {
-          // Create a pulley composite:
-          // 1. Static pulley wheel (circle) with given radius.
-          let radius = parseFloat(item.radius) || 30;
-          let pulleyWheel = this.matter.bodies.circle(centerX, centerY, radius, {
-            isStatic: true,
-            friction: parseFloat(item.friction) || 0.1
-          });
-          // 2. Dynamic bucket: a rectangle (50 x 30) below the pulley.
-          let bucket = this.matter.bodies.rectangle(centerX, centerY + radius + 50, 50, 30, {
-            restitution: 0,
-            friction: 0.1
-          });
-          // 3. Constraint simulating the rope with a default length.
-          let ropeLength = 100;
-          let pulleyConstraint = this.matter.constraint.create({
-            bodyA: pulleyWheel,
-            pointA: { x: 0, y: radius }, // bottom of the pulley wheel
-            bodyB: bucket,
-            pointB: { x: 0, y: -15 }, // top center of the bucket
-            stiffness: 0.9,
-            length: ropeLength
-          });
-          // 4. Create a composite to group the pulley system.
-          let pulleyComposite = this.matter.composite.create();
-          this.matter.composite.add(pulleyComposite, pulleyWheel);
-          this.matter.composite.add(pulleyComposite, bucket);
-          this.matter.composite.add(pulleyComposite, pulleyConstraint);
-          this.matter.world.add(pulleyComposite);
-        } else if (item.type === 'inclined-plane') {
-          // Create a static inclined plane as a rectangle (150 x 30)
-          let angleRad = Phaser.Math.DegToRad(parseFloat(item.angle) || 0);
-          let plane = this.matter.bodies.rectangle(centerX, centerY, 150, 30, {
-            isStatic: true,
-            friction: parseFloat(item.friction) || 0.05,
-            angle: angleRad
-          });
-          this.matter.world.add(plane);
-        } else {
-          // Default: static box (80x80)
-          let box = this.matter.bodies.rectangle(centerX, centerY, 80, 80, { isStatic: true });
-          this.matter.world.add(box);
-        }
-      });
-      // On pointer down, drop a dynamic marble.
-      this.input.on('pointerdown', function(pointer) {
-        let marble = this.matter.bodies.circle(pointer.x, pointer.y, 15, {
-          restitution: 0.8,
-          friction: 0.005
-        });
-        this.matter.world.add(marble);
-      }, this);
-    }
-    function updateSim() { /* Update loop if needed */ }
-
-    /***** Transition to Simulation Mode *****/
-    document.getElementById('run-simulation').addEventListener('click', () => {
-      builderView.style.display = 'none';
-      simulationView.style.display = 'block';
-      const configData = [];
-      const comps = builderCanvas.querySelectorAll('.dropped-component');
-      comps.forEach(comp => {
-        configData.push({
-          type: comp.dataset.type,
-          x: parseInt(comp.style.left, 10),
-          y: parseInt(comp.style.top, 10),
-          angle: comp.dataset.angle,
-          friction: comp.dataset.friction,
-          fulcrum: comp.dataset.fulcrum,
-          pivot: comp.dataset.pivot,
-          radius: comp.dataset.radius
-        });
-      });
-      createSimulation(configData);
-    });
-
-    /***** Simulation Controls *****/
-    document.getElementById('return-builder').addEventListener('click', () => {
-      if (game) { game.destroy(true); game = null; }
-      simulationView.style.display = 'none';
-      builderView.style.display = 'block';
-    });
-  });
 </script>
 </body>
 </html>
