@@ -573,34 +573,28 @@
                     let maxAngle = Phaser.Math.DegToRad(parseFloat(item.maxAngle) || 30);
                     this.levers.push({body: lever, min: minAngle, max: maxAngle});
                 } else if (item.type === 'pulley') {
-                    // Create a pulley composite:
-                    // 1. Static pulley wheel (circle) with given radius.
                     let radius = parseFloat(item.radius) || 30;
-                    let pulleyWheel = this.matter.bodies.circle(centerX, centerY, radius, {
+
+                    const pulleyItemsY = centerY - radius - 10;
+                    const pulleyWheel = this.matter.bodies.circle(centerX, centerY, radius, {
                         isStatic: true,
                         friction: parseFloat(item.friction) || 0.1
                     });
-                    // 2. Dynamic bucket: a rectangle (50 x 30) below the pulley.
-                    let bucket = this.matter.bodies.rectangle(centerX, centerY + radius + 50, 50, 30, {
+
+                    const bucketX = centerX + radius + 10;
+                    const bucket = this.matter.bodies.rectangle(bucketX, pulleyItemsY, 50, 30, {
                         restitution: 0,
                         friction: 0.1
                     });
-                    // 3. Constraint simulating the rope with a default length.
-                    let ropeLength = 100;
-                    let pulleyConstraint = this.matter.constraint.create({
-                        bodyA: pulleyWheel,
-                        pointA: {x: 0, y: radius}, // bottom of the pulley wheel
-                        bodyB: bucket,
-                        pointB: {x: 0, y: -15}, // top center of the bucket
-                        stiffness: 0.9,
-                        length: ropeLength
+
+                    const hookX = centerX - radius - 10;
+                    const hook = this.matter.bodies.rectangle(hookX, pulleyItemsY, 30, 30, {
+                        restitution: 0,
+                        friction: 0.1,
+                        density: bucket.density // make the hook weigh the same as the bucket to balance the rope
                     });
-                    // 4. Create a composite to group the pulley system.
-                    let pulleyComposite = this.matter.composite.create();
-                    this.matter.composite.add(pulleyComposite, pulleyWheel);
-                    this.matter.composite.add(pulleyComposite, bucket);
-                    this.matter.composite.add(pulleyComposite, pulleyConstraint);
-                    this.matter.world.add(pulleyComposite);
+
+                    this.matter.world.add([pulleyWheel, bucket, hook]);
                 } else if (item.type === 'inclined-plane') {
                     centerX = centerX - inclinedPlaneLeftOffset;
                     centerY = centerY - inclinedPlaneTopOffset;
