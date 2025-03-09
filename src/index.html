@@ -619,7 +619,7 @@
                     const hook = this.matter.bodies.rectangle(leftItem === 'hook' ? leftItemX : rightItemX, pulleyItemsY, 30, 30, {
                         restitution: 0,
                         friction: 0.1,
-                        density: bucket.density * 2
+                        density: bucket.density * 2.75
                     });
                     hook.label = 'hook';
                     this.matter.world.add(hook);
@@ -678,7 +678,7 @@
                         const bucket = bodyA.label === 'bucket' ? bodyA : bodyB;
                         const marble = bodyA.label === 'marble' ? bodyA : bodyB;
                         // Increase the bucket's mass by adding the marble's mass.
-                        this.matter.body.setMass(bucket, bucket.mass + marble.mass);
+                        this.matter.body.setMass(bucket, Math.min(bucket.mass + marble.mass, 2.5));
                         // Remove the marble from the world.
                         this.matter.world.remove(marble);
                     }
