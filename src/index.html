@@ -539,20 +539,21 @@
                         default:
                             pivotRatio = 0.5;
                     }
-                    let lever = this.matter.bodies.rectangle(centerX, centerY, 100, 20, {
+                    let leverThickness = 10;
+                    let lever = this.matter.bodies.rectangle(centerX, centerY, 100, leverThickness, {
                         restitution: 0,
                         friction: parseFloat(item.friction) || 0.1
                     });
                     let pivotX = centerX - 50 + pivotRatio * 100;
-                    let pivotY = centerY + 20;
-                    let fulcrum = this.matter.bodies.polygon(pivotX, pivotY, 3, 10, {
+                    let pivotY = centerY + leverThickness;
+                    let fulcrum = this.matter.bodies.polygon(pivotX, pivotY, 3, leverThickness / 2, {
                         isStatic: true,
                         angle: Phaser.Math.DegToRad(208)
                     });
                     let leverConstraint = this.matter.constraint.create({
                         bodyA: lever,
                         pointA: {x: -50 + pivotRatio * 100, y: 0},
-                        pointB: {x: pivotX, y: pivotY - 20},
+                        pointB: {x: pivotX, y: pivotY - leverThickness},
                         stiffness: 1,
                         length: 0
                     });
@@ -601,7 +602,7 @@
 
                     this.pulleys.push({pulleyWheel, chainLinks, radius, linkRadius});
 
-                    const pulleyItemsY = centerY - radius - 10;
+                    const pulleyItemsY = centerY - radius - 1;
                     const rightItemX = centerX + radius + 10;
                     const leftItemX = centerX - radius - 10;
 
