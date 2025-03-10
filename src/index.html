@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
-    <title>Virtual Rube Goldberg Machine Builder</title>
+    <title>The Chain Reaction Builder</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="index.css">
 </head>
 <body>
 <!-- Mode Selection Screen -->
 <div id="mode-selection">
-    <h1>Virtual Rube Goldberg Machine Builder</h1>
+    <img src="assets/logo.png" alt="The Chain Reaction Builder Logo" style="width: 55vw; min-width: 320px;"/>
     <button data-mode="debug">Debug a Machine</button>
     <button data-mode="scenario">Play Scenario</button>
     <button data-mode="sandbox">Sandbox Mode</button>
@@ -515,7 +515,7 @@
         }
 
         function preloadSim() {
-            this.load.image('sky', 'https://labs.phaser.io/assets/skies/sky4.png');
+            this.load.image('sky', 'https://labs.phaser.io/assets/skies/gradient15.png');
         }
 
         function createSim() {
