@@ -265,9 +265,9 @@
                 if (scenario === "bucket") {
                     scenarioText = "Bucket Challenge: A marble will drop from the top left. Your goal is to guide it to the bucket at the bottom right.";
                 } else if (scenario === "reveal-gift") {
-                    scenarioText = "Reveal a Gift: A gift box is connected to a pulley. Your goal is to lift the box (like a restaurant tray with a cover) to reveal the gift—a silly banana!";
+                    scenarioText = "Reveal a Gift: A gift box is connected to a pulley. Your goal is to lift the box to reveal the gift!";
                 }
-                showPrompt(scenarioText + "\n\nPress OK to continue.", false, "").then((response) => {
+                showPrompt(scenarioText, false, "").then((response) => {
                     if (response) {
                         scenarioSelection.style.display = 'none';
                         builderInterface.style.display = 'block';
