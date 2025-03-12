@@ -49,16 +49,19 @@
             <!-- Toolbox Panel -->
             <div id="toolbox">
                 <h3>Toolbox</h3>
-                <div class="component" draggable="true" data-type="lever">Lever</div>
-                <div class="component" draggable="true" data-type="pulley">Pulley</div>
+                <div class="component" draggable="true" data-type="bucket">Bucket</div>
+                <div class="component" draggable="true" data-type="dominoes">Dominoes</div>
                 <div class="component" draggable="true" data-type="inclined-plane">Inclined Plane</div>
+                <div class="component" draggable="true" data-type="lever">Lever</div>
+                <div class="component" draggable="true" data-type="pendulum">Pendulum</div>
+                <div class="component" draggable="true" data-type="pulley">Pulley</div>
+                <div class="component" draggable="true" data-type="skateboard">Skateboard</div>
+                <div class="component" draggable="true" data-type="staircase">Staircase</div>
             </div>
             <!-- Builder Canvas -->
             <div id="builder-canvas"></div>
             <!-- Feedback Panel -->
             <div id="feedback">
-                <h3>Feedback</h3>
-                <p>Feedback and hints will appear here during the simulation.</p>
                 <h3>Help</h3>
                 <p>
                     Drag items from the toolbox onto the canvas to build your machine.<br>
@@ -384,44 +387,51 @@
         function createDroppedComponent(componentType, x, y, properties = {}) {
             const newComponent = document.createElement('div');
             newComponent.className = 'dropped-component ' + componentType;
-            if (componentType === 'lever') {
-                newComponent.style.width = '100px';
-                newComponent.style.height = '20px';
-                newComponent.style.left = `${x - leverLeftOffset}px`;
-                newComponent.style.top = `${y - leverTopOffset}px`;
-            } else if (componentType === 'pulley') {
-                newComponent.style.width = '60px';
-                newComponent.style.height = '60px';
-                newComponent.style.left = `${x - pulleyLeftOffset}px`;
-                newComponent.style.top = `${y - pulleyTopOffset}px`;
-            } else if (componentType === 'inclined-plane') {
+            newComponent.style.left = `${x - defaultLeftOffset}px`;
+            newComponent.style.top = `${y - defaultTopOffset}px`;
+            newComponent.dataset.type = componentType;
+            newComponent.dataset.angle = properties.angle || '0';
+
+            // Bucket
+
+            // Dominoes
+
+            // Inclined Plane
+            if (componentType === 'inclined-plane') {
                 newComponent.style.width = '150px';
                 newComponent.style.height = '30px';
                 newComponent.style.left = `${x - inclinedPlaneLeftOffset}px`;
                 newComponent.style.top = `${y - inclinedPlaneTopOffset}px`;
                 newComponent.dataset.angle = properties.angle || '0';
                 newComponent.style.transform = `rotate(${newComponent.dataset.angle}deg)`;
-            } else {
-                newComponent.style.left = `${x - defaultLeftOffset}px`;
-                newComponent.style.top = `${y - defaultTopOffset}px`;
+                newComponent.dataset.friction = properties.friction || '0.05';
             }
-            newComponent.dataset.type = componentType;
-            newComponent.dataset.angle = properties.angle || '0';
-            if (componentType === 'inclined-plane' && !properties.friction) {
-                properties.friction = '0.05';
-            }
-            if (componentType === 'pulley' && !properties.friction) {
-                properties.friction = '0.1';
-            }
-            newComponent.dataset.friction = properties.friction || '';
 
+            // Lever
             if (componentType === 'lever') {
+                newComponent.style.width = '100px';
+                newComponent.style.height = '20px';
+                newComponent.style.left = `${x - leverLeftOffset}px`;
+                newComponent.style.top = `${y - leverTopOffset}px`;
                 newComponent.dataset.fulcrum = properties.fulcrum || 'center';
                 newComponent.dataset.pivot = properties.pivot || '0.5';
             }
+
+            // Pendulum
+
+            // Pulley
             if (componentType === 'pulley') {
+                newComponent.style.width = '60px';
+                newComponent.style.height = '60px';
+                newComponent.style.left = `${x - pulleyLeftOffset}px`;
+                newComponent.style.top = `${y - pulleyTopOffset}px`;
+                newComponent.dataset.friction = properties.friction || '0.1';
                 newComponent.dataset.radius = properties.radius || '30';
             }
+
+            // Skateboard
+
+            // Staircase
 
             newComponent.addEventListener('contextmenu', (event) => {
                 event.preventDefault();
@@ -526,6 +536,25 @@
             this.configData.forEach(item => {
                 let centerX = item.x;
                 let centerY = item.y;
+
+                // Bucket
+
+                // Dominoes
+
+                // Inclined Plane
+                if (item.type === 'inclined-plane') {
+                    centerX = centerX - inclinedPlaneLeftOffset;
+                    centerY = centerY - inclinedPlaneTopOffset;
+                    let angleRad = Phaser.Math.DegToRad(parseFloat(item.angle) || 0);
+                    let plane = this.matter.bodies.rectangle(centerX, centerY, 150, 30, {
+                        isStatic: true,
+                        friction: parseFloat(item.friction) || 0.05,
+                        angle: angleRad
+                    });
+                    this.matter.world.add(plane);
+                }
+
+                // Lever
                 if (item.type === 'lever') {
                     let pivotRatio;
                     switch (item.fulcrum) {
@@ -565,7 +594,12 @@
                     let minAngle = Phaser.Math.DegToRad(parseFloat(item.minAngle) || -30);
                     let maxAngle = Phaser.Math.DegToRad(parseFloat(item.maxAngle) || 30);
                     this.levers.push({body: lever, min: minAngle, max: maxAngle});
-                } else if (item.type === 'pulley') {
+                }
+
+                // Pendulum
+
+                // Pulley
+                if (item.type === 'pulley') {
                     let radius = parseFloat(item.radius) || 30;
                     // Create a static pulley wheel.
                     const pulleyWheel = this.matter.bodies.circle(centerX, centerY, radius, {
@@ -645,20 +679,11 @@
                         length: 2
                     });
                     this.matter.world.add(rightItemConstraint);
-                } else if (item.type === 'inclined-plane') {
-                    centerX = centerX - inclinedPlaneLeftOffset;
-                    centerY = centerY - inclinedPlaneTopOffset;
-                    let angleRad = Phaser.Math.DegToRad(parseFloat(item.angle) || 0);
-                    let plane = this.matter.bodies.rectangle(centerX, centerY, 150, 30, {
-                        isStatic: true,
-                        friction: parseFloat(item.friction) || 0.05,
-                        angle: angleRad
-                    });
-                    this.matter.world.add(plane);
-                } else {
-                    let box = this.matter.bodies.rectangle(centerX, centerY, 80, 80, {isStatic: true});
-                    this.matter.world.add(box);
                 }
+
+                // Skateboard
+
+                // Staircase
             });
             // On pointer down, drop a dynamic marble.
             this.input.on('pointerdown', function (pointer) {
