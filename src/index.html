@@ -50,7 +50,7 @@
             <div id="toolbox">
                 <h3>Toolbox</h3>
                 <div class="component" draggable="true" data-type="bucket">Bucket</div>
-                <div class="component" draggable="true" data-type="dominoes">Dominoes</div>
+                <div class="component" draggable="true" data-type="domino">Domino</div>
                 <div class="component" draggable="true" data-type="inclined-plane">Inclined Plane</div>
                 <div class="component" draggable="true" data-type="lever">Lever</div>
                 <div class="component" draggable="true" data-type="pendulum">Pendulum</div>
@@ -387,14 +387,29 @@
         function createDroppedComponent(componentType, x, y, properties = {}) {
             const newComponent = document.createElement('div');
             newComponent.className = 'dropped-component ' + componentType;
+
+            // Set a default position (we override for some types below)
             newComponent.style.left = `${x - defaultLeftOffset}px`;
             newComponent.style.top = `${y - defaultTopOffset}px`;
             newComponent.dataset.type = componentType;
             newComponent.dataset.angle = properties.angle || '0';
 
             // Bucket
+            if (componentType === 'bucket') {
+                newComponent.style.width = '50px';
+                newComponent.style.height = '30px';
+                newComponent.style.backgroundColor = '#ffa';
+                // Additional properties can be added as needed.
+                newComponent.dataset.friction = properties.friction || '0.1';
+            }
 
-            // Dominoes
+            // Domino
+            if (componentType === 'domino') {
+                newComponent.style.width = '20px';
+                newComponent.style.height = '60px';
+                newComponent.style.backgroundColor = '#ccc';
+                newComponent.dataset.friction = properties.friction || '0.3';
+            }
 
             // Inclined Plane
             if (componentType === 'inclined-plane') {
@@ -418,6 +433,13 @@
             }
 
             // Pendulum
+            if (componentType === 'pendulum') {
+                newComponent.style.width = '40px';
+                newComponent.style.height = '40px';
+                newComponent.style.borderRadius = '50%';
+                newComponent.style.backgroundColor = '#cfc';
+                newComponent.dataset.friction = properties.friction || '0.1';
+            }
 
             // Pulley
             if (componentType === 'pulley') {
@@ -430,8 +452,24 @@
             }
 
             // Skateboard
+            if (componentType === 'skateboard') {
+                newComponent.style.width = '80px';
+                newComponent.style.height = '20px';
+                newComponent.style.borderRadius = '10px';
+                newComponent.style.backgroundColor = '#fcc';
+                newComponent.dataset.friction = properties.friction || '0.2';
+            }
 
             // Staircase
+            if (componentType === 'staircase') {
+                newComponent.style.width = '120px';
+                newComponent.style.height = '40px';
+                newComponent.style.backgroundColor = '#ddd';
+                newComponent.style.border = '2px solid #999';
+                newComponent.style.boxSizing = 'border-box';
+                newComponent.innerText = "Stairs";
+                newComponent.dataset.friction = properties.friction || '0.2';
+            }
 
             newComponent.addEventListener('contextmenu', (event) => {
                 event.preventDefault();
@@ -537,10 +575,29 @@
                 let centerX = item.x;
                 let centerY = item.y;
 
+                // -------------------------
                 // Bucket
+                if (item.type === 'bucket') {
+                    // A simple dynamic bucket that could, for instance, collect marbles.
+                    const bucket = this.matter.bodies.rectangle(centerX, centerY, 50, 30, {
+                        restitution: 0,
+                        friction: parseFloat(item.friction) || 0.1
+                    });
+                    bucket.label = 'bucket';
+                    this.matter.world.add(bucket);
+                }
 
-                // Dominoes
+                // -------------------------
+                // Domino
+                if (item.type === 'domino') {
+                    const domino = this.matter.bodies.rectangle(centerX, centerY, 20, 60, {
+                        restitution: 0,
+                        friction: 0.3
+                    });
+                    this.matter.world.add(domino);
+                }
 
+                // -------------------------
                 // Inclined Plane
                 if (item.type === 'inclined-plane') {
                     centerX = centerX - inclinedPlaneLeftOffset;
@@ -554,6 +611,7 @@
                     this.matter.world.add(plane);
                 }
 
+                // -------------------------
                 // Lever
                 if (item.type === 'lever') {
                     let pivotRatio;
@@ -581,8 +639,8 @@
                     });
                     let leverConstraint = this.matter.constraint.create({
                         bodyA: lever,
-                        pointA: {x: -50 + pivotRatio * 100, y: 0},
-                        pointB: {x: pivotX, y: pivotY - leverThickness},
+                        pointA: { x: -50 + pivotRatio * 100, y: 0 },
+                        pointB: { x: pivotX, y: pivotY - leverThickness },
                         stiffness: 1,
                         length: 0
                     });
@@ -593,11 +651,30 @@
                     this.matter.world.add(leverComposite);
                     let minAngle = Phaser.Math.DegToRad(parseFloat(item.minAngle) || -30);
                     let maxAngle = Phaser.Math.DegToRad(parseFloat(item.maxAngle) || 30);
-                    this.levers.push({body: lever, min: minAngle, max: maxAngle});
+                    this.levers.push({ body: lever, min: minAngle, max: maxAngle });
                 }
 
+                // -------------------------
                 // Pendulum
+                if (item.type === 'pendulum') {
+                    // For a pendulum, we create a bob (circle) and attach it to a fixed pivot above.
+                    const pivotPoint = { x: centerX, y: centerY - 100 }; // pivot 100px above
+                    const bob = this.matter.bodies.circle(centerX, centerY, 20, {
+                        restitution: 0.8,
+                        friction: 0.1
+                    });
+                    this.matter.world.add(bob);
+                    const pendulumConstraint = this.matter.constraint.create({
+                        pointA: pivotPoint,
+                        bodyB: bob,
+                        pointB: { x: 0, y: 0 },
+                        length: 100,
+                        stiffness: 1
+                    });
+                    this.matter.world.add(pendulumConstraint);
+                }
 
+                // -------------------------
                 // Pulley
                 if (item.type === 'pulley') {
                     let radius = parseFloat(item.radius) || 30;
@@ -612,7 +689,7 @@
                     // This will prevent the chain from "falling through" the pulley wheel
                     const blockage = this.matter.bodies.rectangle(centerX, centerY, radius * 2.2, 5, {
                         isStatic: true,
-                        render: { visible: false }  // make it invisible
+                        render: { visible: false }
                     });
                     this.matter.world.add(blockage);
 
@@ -633,13 +710,12 @@
                         this.matter.world.add(link);
                         chainLinks.push(link);
                     }
-                    // Connect adjacent chain links.
                     for (let i = 0; i < chainLinks.length - 1; i++) {
                         const linkConstraint = this.matter.constraint.create({
                             bodyA: chainLinks[i],
                             bodyB: chainLinks[i + 1],
                             length: linkRadius * 2 + 1,
-                            stiffness: 1  // maximum stiffness to prevent stretching
+                            stiffness: 1
                         });
                         this.matter.world.add(linkConstraint);
                     }
@@ -650,7 +726,7 @@
                     const rightItemX = centerX + radius + 10;
                     const leftItemX = centerX - radius - 10;
 
-                    // Set left/right items (bucket/hook).
+                    // Set left/right items (choose which side is bucket and which is hook).
                     let leftItem = 'bucket';
                     let rightItem = 'hook';
 
@@ -696,10 +772,76 @@
                     this.matter.world.add(rightItemConstraint);
                 }
 
+                // -------------------------
                 // Skateboard
+                if (item.type === 'skateboard') {
+                    // Create a composite: a board with two wheels.
+                    const board = this.matter.bodies.rectangle(centerX, centerY, 80, 20, {
+                        restitution: 0,
+                        friction: 0.2
+                    });
+                    const wheelRadius = 10;
+                    const wheelOffsetX = 30;
+                    // Position wheels slightly below the board.
+                    const leftWheel = this.matter.bodies.circle(centerX - wheelOffsetX, centerY + 20, wheelRadius, {
+                        restitution: 0,
+                        friction: 0.8
+                    });
+                    const rightWheel = this.matter.bodies.circle(centerX + wheelOffsetX, centerY + 20, wheelRadius, {
+                        restitution: 0,
+                        friction: 0.8
+                    });
+                    this.matter.world.add(board);
+                    this.matter.world.add(leftWheel);
+                    this.matter.world.add(rightWheel);
+                    // Attach wheels to the board.
+                    const leftConstraint = this.matter.constraint.create({
+                        bodyA: board,
+                        pointA: { x: -wheelOffsetX, y: 20 },
+                        bodyB: leftWheel,
+                        pointB: { x: 0, y: 0 },
+                        stiffness: 1,
+                        length: 0
+                    });
+                    const rightConstraint = this.matter.constraint.create({
+                        bodyA: board,
+                        pointA: { x: wheelOffsetX, y: 20 },
+                        bodyB: rightWheel,
+                        pointB: { x: 0, y: 0 },
+                        stiffness: 1,
+                        length: 0
+                    });
+                    this.matter.world.add(leftConstraint);
+                    this.matter.world.add(rightConstraint);
+                }
 
+                // -------------------------
                 // Staircase
+                if (item.type === 'staircase') {
+                    // Create a simple staircase composed of three static steps.
+                    const numberOfSteps = 3;
+                    const stepWidth = 100;
+                    const stepHeight = 20;
+                    for (let i = 0; i < numberOfSteps; i++) {
+                        // Position each step with a slight horizontal offset and vertical offset.
+                        const stepX = centerX + i * (stepWidth / numberOfSteps);
+                        const stepY = centerY + i * stepHeight;
+                        const step = this.matter.bodies.rectangle(stepX, stepY, stepWidth, stepHeight, {
+                            isStatic: true,
+                            friction: 0.5
+                        });
+                        this.matter.world.add(step);
+                    }
+                }
+
+                // -------------------------
+                // Default: if no specific type, create a static box.
+                if (!['bucket', 'domino', 'inclined-plane', 'lever', 'pendulum', 'pulley', 'skateboard', 'staircase'].includes(item.type)) {
+                    let box = this.matter.bodies.rectangle(centerX, centerY, 80, 80, { isStatic: true });
+                    this.matter.world.add(box);
+                }
             });
+
             // On pointer down, drop a dynamic marble.
             this.input.on('pointerdown', function (pointer) {
                 let marble = this.matter.bodies.circle(pointer.x, pointer.y, 15, {
@@ -718,9 +860,9 @@
                         (bodyB.label === 'bucket' && bodyA.label === 'marble')) {
                         const bucket = bodyA.label === 'bucket' ? bodyA : bodyB;
                         const marble = bodyA.label === 'marble' ? bodyA : bodyB;
-                        // Increase the bucket's mass by adding the marble's mass.
+                        // Increase the bucket's mass (up to a maximum, e.g. 2.5).
                         this.matter.body.setMass(bucket, Math.min(bucket.mass + marble.mass, 2.5));
-                        // Remove the marble from the world.
+                        // Remove the marble.
                         this.matter.world.remove(marble);
                     }
                 });
