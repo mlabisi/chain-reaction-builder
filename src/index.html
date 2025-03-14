@@ -601,11 +601,20 @@
                 // Pulley
                 if (item.type === 'pulley') {
                     let radius = parseFloat(item.radius) || 30;
-                    // Create a static pulley wheel.
+                    // Create the static pulley wheel.
                     const pulleyWheel = this.matter.bodies.circle(centerX, centerY, radius, {
                         isStatic: true
                     });
                     this.matter.world.add(pulleyWheel);
+
+                    // Create an invisible blockage (a thin horizontal barrier)
+                    // Positioned at the top of the pulley (i.e. at the pulley's y-coordinate)
+                    // This will prevent the chain from "falling through" the pulley wheel
+                    const blockage = this.matter.bodies.rectangle(centerX, centerY, radius * 2.2, 5, {
+                        isStatic: true,
+                        render: { visible: false }  // make it invisible
+                    });
+                    this.matter.world.add(blockage);
 
                     // Set up the chain.
                     const chainLength = radius * 0.75;
@@ -614,7 +623,7 @@
                     const beltRadius = radius + linkRadius;
                     for (let i = 0; i < chainLength; i++) {
                         const fraction = i / (chainLength - 1);
-                        const angle = -Math.PI + fraction * Math.PI;
+                        const angle = -Math.PI + fraction * Math.PI; // from -π to 0 (top half)
                         const x = pulleyWheel.position.x + beltRadius * Math.cos(angle);
                         const y = pulleyWheel.position.y + beltRadius * Math.sin(angle);
                         const link = this.matter.bodies.circle(x, y, linkRadius, {
@@ -624,47 +633,53 @@
                         this.matter.world.add(link);
                         chainLinks.push(link);
                     }
+                    // Connect adjacent chain links.
                     for (let i = 0; i < chainLinks.length - 1; i++) {
                         const linkConstraint = this.matter.constraint.create({
                             bodyA: chainLinks[i],
                             bodyB: chainLinks[i + 1],
                             length: linkRadius * 2 + 1,
-                            stiffness: 1
+                            stiffness: 1  // maximum stiffness to prevent stretching
                         });
                         this.matter.world.add(linkConstraint);
                     }
 
-                    this.pulleys.push({pulleyWheel, chainLinks, radius, linkRadius});
+                    this.pulleys.push({ pulleyWheel, chainLinks, radius, linkRadius, blockage });
 
                     const pulleyItemsY = centerY - radius - 1;
                     const rightItemX = centerX + radius + 10;
                     const leftItemX = centerX - radius - 10;
 
-                    // set the left and right items
+                    // Set left/right items (bucket/hook).
                     let leftItem = 'bucket';
                     let rightItem = 'hook';
 
-                    const bucket = this.matter.bodies.rectangle(leftItem === 'bucket' ? leftItemX : rightItemX, pulleyItemsY, 50, 30, {
-                        restitution: 0,
-                        friction: 0.1
-                    });
+                    const bucket = this.matter.bodies.rectangle(
+                        leftItem === 'bucket' ? leftItemX : rightItemX,
+                        pulleyItemsY,
+                        50,
+                        30,
+                        { restitution: 0, friction: 0.1 }
+                    );
                     bucket.label = 'bucket';
                     this.matter.world.add(bucket);
 
-                    const hook = this.matter.bodies.rectangle(leftItem === 'hook' ? leftItemX : rightItemX, pulleyItemsY, 30, 30, {
-                        restitution: 0,
-                        friction: 0.1,
-                        density: bucket.density * 2.75
-                    });
+                    const hook = this.matter.bodies.rectangle(
+                        leftItem === 'hook' ? leftItemX : rightItemX,
+                        pulleyItemsY,
+                        30,
+                        30,
+                        { restitution: 0, friction: 0.1, density: bucket.density * 2.75 }
+                    );
                     hook.label = 'hook';
                     this.matter.world.add(hook);
 
-                    // create constraints
+                    // Create constraints to attach bucket and hook.
                     const leftItemConstraint = this.matter.constraint.create({
                         bodyA: chainLinks[chainLinks.length - 1],
                         bodyB: leftItem === 'bucket' ? bucket : hook,
-                        pointA: {x: 0, y: linkRadius},
-                        pointB: {x: 0, y: -15},
+                        pointA: { x: 0, y: linkRadius },
+                        pointB: { x: 0, y: -15 },
                         stiffness: 0.9,
                         length: 2
                     });
@@ -673,8 +688,8 @@
                     const rightItemConstraint = this.matter.constraint.create({
                         bodyA: rightItem === 'bucket' ? bucket : hook,
                         bodyB: chainLinks[0],
-                        pointA: {x: 0, y: -15},
-                        pointB: {x: 0, y: linkRadius},
+                        pointA: { x: 0, y: -15 },
+                        pointB: { x: 0, y: linkRadius },
                         stiffness: 0.9,
                         length: 2
                     });
