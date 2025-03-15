@@ -52,6 +52,7 @@ body, html {
 #builder-interface {
   display: none;
   height: 100vh;
+  overflow: hidden;
 }
 /* --- Builder View --- */
 #builder-view {
@@ -60,7 +61,8 @@ body, html {
 }
 #builder-container {
   display: flex;
-  height: 100%;
+  height: calc(100vh - 100px);
+  overflow: hidden;
 }
 /* Toolbox Panel */
 #toolbox {
@@ -138,7 +140,7 @@ body, html {
   font-size: 14px;
 }
 #phaser-container {
-  height: calc(100% - 50px);
+  height: 100%;
   border: 1px solid #ccc;
   position: relative;
   overflow: hidden;

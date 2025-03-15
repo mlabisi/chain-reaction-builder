@@ -206,14 +206,6 @@
         const builderCanvas = document.getElementById('builder-canvas');
 
         /***** Global Variables *****/
-        const leverLeftOffset = 50;
-        const leverTopOffset = 10;
-        const pulleyLeftOffset = 30;
-        const pulleyTopOffset = 30;
-        const inclinedPlaneLeftOffset = 75;
-        const inclinedPlaneTopOffset = 15;
-        const defaultLeftOffset = 40;
-        const defaultTopOffset = 40;
         let canvasWidth;
         let canvasHeight;
 
@@ -371,7 +363,7 @@
             const rect = builderCanvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-            createDroppedComponent(componentType, x, y);
+            createDroppedComponent(componentType, x, y, {left: e.offsetX, top: e.offsetY});
             saveState();
         });
 
@@ -380,14 +372,11 @@
             canvasWidth = canvasRect.width;
             canvasHeight = canvasRect.height;
 
-            const x = parseInt(centerX);
-            const y = parseInt(centerY);
-
             const newComponent = document.createElement('div');
             newComponent.className = 'dropped-component ' + componentType;
 
-            newComponent.style.left = `${x - defaultLeftOffset}px`;
-            newComponent.style.top = `${y - defaultTopOffset}px`;
+            newComponent.style.left = `${parseInt(properties.left)}px`;
+            newComponent.style.top = `${parseInt(properties.top)}px`;
             newComponent.dataset.type = componentType;
             newComponent.dataset.angle = properties.angle || '0';
 
@@ -410,8 +399,6 @@
             if (componentType === 'inclined-plane') {
                 newComponent.style.width = properties.width || '150px';
                 newComponent.style.height = properties.height || '30px';
-                newComponent.style.left = `${x - inclinedPlaneLeftOffset}px`;
-                newComponent.style.top = `${y - inclinedPlaneTopOffset}px`;
                 newComponent.dataset.angle = properties.angle || '0';
                 newComponent.style.transform = `rotate(${newComponent.dataset.angle}deg)`;
                 newComponent.dataset.friction = properties.friction || '0.05';
@@ -421,8 +408,6 @@
             if (componentType === 'lever') {
                 newComponent.style.width = properties.width || '100px';
                 newComponent.style.height = properties.height || '20px';
-                newComponent.style.left = `${x - leverLeftOffset}px`;
-                newComponent.style.top = `${y - leverTopOffset}px`;
                 newComponent.dataset.fulcrum = properties.fulcrum || 'center';
                 newComponent.dataset.pivot = properties.pivot || '0.5';
             }
@@ -441,8 +426,6 @@
             if (componentType === 'pulley') {
                 newComponent.style.width = '60px';
                 newComponent.style.height = '60px';
-                newComponent.style.left = `${x - pulleyLeftOffset}px`;
-                newComponent.style.top = `${y - pulleyTopOffset}px`;
                 newComponent.dataset.friction = properties.friction || '0.1';
                 newComponent.dataset.radius = properties.radius || '25';
                 newComponent.dataset.bucketOnLeft = properties.bucketOnLeft || 'yes';
@@ -463,16 +446,16 @@
                 newComponent.style.boxSizing = 'border-box';
 
                 // used purely for display on canvas
-                newComponent.style.width = `${(properties.width ? parseInt(properties.width.replaceAll('px', '')) : 120) * 1.5}px`;
-                newComponent.style.height = `${(properties.height ? parseInt(properties.height.replaceAll('px', '')) : 40) * 3}px`;
+                newComponent.style.width = `${(properties.width ? parseInt(properties.width) : 120) * 1.5}px`;
+                newComponent.style.height = `${(properties.height ? parseInt(properties.height) : 40) * 3}px`;
 
                 // these dimensions will override the style when the translation to phaser occurs
                 newComponent.dataset.width = properties.width || '120px';
                 newComponent.dataset.height = properties.height || '20px';
             }
 
-            newComponent.dataset.centerX = `${parseInt(newComponent.style.left.replaceAll('px', '')) + parseInt(newComponent.style.width.replaceAll('px', '')) / 2}`;
-            newComponent.dataset.centerY = `${parseInt(newComponent.style.top.replaceAll('px', '')) + parseInt(newComponent.style.height.replaceAll('px', '')) / 2}`;
+            newComponent.dataset.centerX = `${parseInt(newComponent.style.left) + parseInt(newComponent.style.width) / 2}`;
+            newComponent.dataset.centerY = `${parseInt(newComponent.style.top) + parseInt(newComponent.style.height) / 2}`;
 
             newComponent.addEventListener('contextmenu', (event) => {
                 event.preventDefault();
@@ -598,8 +581,8 @@
                         showPropertiesDialog('Edit Staircase Properties', fields).then(data => {
                             if (data !== null) {
                                 // used purely for display on canvas
-                                newComponent.style.width = `${(data.width ? parseInt(data.width.replaceAll('px', '')) : 120) * 1.5}px`;
-                                newComponent.style.height = `${(data.height ? parseInt(data.height.replaceAll('px', '')) : 40) * 3}px`;
+                                newComponent.style.width = `${(data.width ? parseInt(data.width) : 120) * 1.5}px`;
+                                newComponent.style.height = `${(data.height ? parseInt(data.height) : 40) * 3}px`;
 
                                 // these dimensions will override the style when the translation to phaser occurs
                                 newComponent.dataset.width = data.width;
@@ -675,8 +658,8 @@
             simConfig = {
                 type: Phaser.AUTO,
                 parent: 'phaser-container',
-                width: 800,
-                height: 600,
+                width: canvasWidth,
+                height: canvasHeight,
                 physics: {
                     default: 'matter',
                     matter: {
@@ -702,18 +685,19 @@
 
         function preloadSim() {
             this.load.image('sky', 'https://labs.phaser.io/assets/skies/gradient15.png');
+            this.load.image('pegboard', 'assets/pegboard.png');
         }
 
         function createSim() {
             this.matter.world.setBounds(0, 0, this.windowWidth, this.windowHeight);
+            this.add.image(0, 0, 'pegboard').setOrigin(0, 0);
 
-            this.add.image(400, 300, 'sky');
             // Create composite/compound bodies for each builder item:
             this.configData.forEach(item => {
                 let centerX = parseInt(item.centerX);
                 let centerY = parseInt(item.centerY);
-                const width = parseInt(item.width.replaceAll('px', ''));
-                const height = parseInt(item.height.replaceAll('px', ''));
+                const width = parseInt(item.width);
+                const height = parseInt(item.height);
 
                 // -------------------------
                 // Bucket
