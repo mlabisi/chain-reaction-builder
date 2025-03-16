@@ -375,6 +375,7 @@
             const newComponent = document.createElement('div');
             newComponent.className = 'dropped-component ' + componentType;
 
+            newComponent.innerText = 'Dropped Component';
             newComponent.style.left = `${parseInt(properties.left)}px`;
             newComponent.style.top = `${parseInt(properties.top)}px`;
             newComponent.dataset.type = componentType;
@@ -382,6 +383,7 @@
 
             // Bucket
             if (componentType === 'bucket') {
+                newComponent.innerText = 'Bucket';
                 newComponent.style.width = properties.width || '50px';
                 newComponent.style.height = properties.height || '30px';
                 newComponent.style.backgroundColor = '#ffa';
@@ -389,6 +391,7 @@
 
             // Domino
             if (componentType === 'domino') {
+                newComponent.innerText = 'Domino';
                 newComponent.style.width = properties.width || '20px';
                 newComponent.style.height = properties.height || '60px';
                 newComponent.style.backgroundColor = '#ccc';
@@ -397,6 +400,7 @@
 
             // Inclined Plane
             if (componentType === 'inclined-plane') {
+                newComponent.innerText = 'Inclined Plane';
                 newComponent.style.width = properties.width || '150px';
                 newComponent.style.height = properties.height || '30px';
                 newComponent.dataset.angle = properties.angle || '0';
@@ -406,6 +410,7 @@
 
             // Lever
             if (componentType === 'lever') {
+                newComponent.innerText = 'Lever';
                 newComponent.style.width = properties.width || '100px';
                 newComponent.style.height = properties.height || '20px';
                 newComponent.dataset.fulcrum = properties.fulcrum || 'center';
@@ -414,6 +419,7 @@
 
             // Pendulum
             if (componentType === 'pendulum') {
+                newComponent.innerText = 'Pendulum';
                 newComponent.style.width = '40px';
                 newComponent.style.height = '40px';
                 newComponent.style.borderRadius = '50%';
@@ -424,6 +430,7 @@
 
             // Pulley
             if (componentType === 'pulley') {
+                newComponent.innerText = 'Pulley';
                 newComponent.style.width = '60px';
                 newComponent.style.height = '60px';
                 newComponent.dataset.friction = properties.friction || '0.1';
@@ -433,6 +440,7 @@
 
             // Skateboard
             if (componentType === 'skateboard') {
+                newComponent.innerText = 'Skateboard';
                 newComponent.style.width = properties.width || '80px';
                 newComponent.style.height = properties.height || '20px';
                 newComponent.style.borderRadius = '10px';
@@ -441,6 +449,7 @@
 
             // Staircase
             if (componentType === 'staircase') {
+                newComponent.innerText = 'Staircase';
                 newComponent.style.backgroundColor = '#ddd';
                 newComponent.style.border = '2px solid #999';
                 newComponent.style.boxSizing = 'border-box';
