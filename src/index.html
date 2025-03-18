@@ -405,7 +405,18 @@
                 newComponent.style.height = properties.height || '30px';
                 newComponent.dataset.angle = properties.angle || '0';
                 newComponent.style.transform = `rotate(${newComponent.dataset.angle}deg)`;
+                newComponent.style.transformOrigin = 'center';
                 newComponent.dataset.friction = properties.friction || '0.05';
+
+                // there's a visual bug for rotated planes, so we need to force the inclined plane itself to be rotated, not the whole container/div
+                if (properties.angle) {
+                    const container = document.createElement('div');
+                    container.className = 'inclined-plane-container';
+                    container.style.position = 'absolute';
+                    container.style.left = newComponent.style.left;
+                    container.style.top = newComponent.style.top;
+                    container.appendChild(newComponent)
+                }
             }
 
             // Lever
