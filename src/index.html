@@ -42,6 +42,7 @@
                 <button id="reset-builder">Reset</button>
                 <button id="undo-builder">Undo</button>
                 <button id="redo-builder">Redo</button>
+                <button id="configure-simulation">Configure Simulation</button>
                 <button id="run-simulation">Run Simulation</button>
             </div>
         </div>
@@ -53,6 +54,7 @@
                 <div class="component" draggable="true" data-type="domino">Domino</div>
                 <div class="component" draggable="true" data-type="inclined-plane">Inclined Plane</div>
                 <div class="component" draggable="true" data-type="lever">Lever</div>
+                <div class="component" draggable="true" data-type="marble">Marble</div>
                 <div class="component" draggable="true" data-type="pendulum">Pendulum</div>
                 <div class="component" draggable="true" data-type="pulley">Pulley</div>
                 <div class="component" draggable="true" data-type="skateboard">Skateboard</div>
@@ -208,6 +210,7 @@
         /***** Global Variables *****/
         let canvasWidth;
         let canvasHeight;
+        let enableMarbles = false;
 
         function saveState() {
             builderHistory = builderHistory.slice(0, historyIndex + 1);
@@ -236,6 +239,229 @@
                     builderView.style.display = 'block';
                     simulationView.style.display = 'none';
                     updateConfigList();
+
+                    if (mode === 'debug') {
+                        showPrompt('Debug the Domino Launcher!', false, "").then(() => {
+                            const debugConfig = [
+                                {
+                                    "enableMarbles": true
+                                },
+                                {
+                                    "0": "left",
+                                    "1": "top",
+                                    "2": "width",
+                                    "3": "height",
+                                    "4": "transform",
+                                    "5": "transform-origin",
+                                    "height": "30px",
+                                    "left": "55px",
+                                    "top": "153px",
+                                    "transform": "rotate(-145deg)",
+                                    "transformOrigin": "center center",
+                                    "webkitTransform": "rotate(-145deg)",
+                                    "webkitTransformOrigin": "center center",
+                                    "width": "150px",
+                                    "type": "inclined-plane",
+                                    "angle": "-145",
+                                    "friction": "0.05",
+                                    "centerX": "130",
+                                    "centerY": "168"
+                                },
+                                {
+                                    "0": "left",
+                                    "1": "top",
+                                    "2": "width",
+                                    "3": "height",
+                                    "4": "border-top-left-radius",
+                                    "5": "border-top-right-radius",
+                                    "6": "border-bottom-right-radius",
+                                    "7": "border-bottom-left-radius",
+                                    "8": "background-color",
+                                    "backgroundColor": "rgb(204, 255, 204)",
+                                    "borderBottomLeftRadius": "50%",
+                                    "borderBottomRightRadius": "50%",
+                                    "borderRadius": "50%",
+                                    "borderTopLeftRadius": "50%",
+                                    "borderTopRightRadius": "50%",
+                                    "height": "40px",
+                                    "left": "202px",
+                                    "top": "159px",
+                                    "webkitBorderBottomLeftRadius": "50%",
+                                    "webkitBorderBottomRightRadius": "50%",
+                                    "webkitBorderRadius": "50%",
+                                    "webkitBorderTopLeftRadius": "50%",
+                                    "webkitBorderTopRightRadius": "50%",
+                                    "width": "40px",
+                                    "type": "pendulum",
+                                    "angle": "0",
+                                    "friction": "0.1",
+                                    "radius": "25",
+                                    "centerX": "222",
+                                    "centerY": "179"
+                                },
+                                {
+                                    "0": "left",
+                                    "1": "top",
+                                    "2": "width",
+                                    "3": "height",
+                                    "4": "border-top-left-radius",
+                                    "5": "border-top-right-radius",
+                                    "6": "border-bottom-right-radius",
+                                    "7": "border-bottom-left-radius",
+                                    "8": "background-color",
+                                    "backgroundColor": "rgb(255, 204, 204)",
+                                    "borderBottomLeftRadius": "10px",
+                                    "borderBottomRightRadius": "10px",
+                                    "borderRadius": "10px",
+                                    "borderTopLeftRadius": "10px",
+                                    "borderTopRightRadius": "10px",
+                                    "height": "20px",
+                                    "left": "280px",
+                                    "top": "172px",
+                                    "webkitBorderBottomLeftRadius": "10px",
+                                    "webkitBorderBottomRightRadius": "10px",
+                                    "webkitBorderRadius": "10px",
+                                    "webkitBorderTopLeftRadius": "10px",
+                                    "webkitBorderTopRightRadius": "10px",
+                                    "width": "80px",
+                                    "type": "skateboard",
+                                    "angle": "0",
+                                    "centerX": "320",
+                                    "centerY": "182"
+                                },
+                                {
+                                    "0": "left",
+                                    "1": "top",
+                                    "2": "width",
+                                    "3": "height",
+                                    "4": "transform",
+                                    "5": "transform-origin",
+                                    "height": "30px",
+                                    "left": "271px",
+                                    "top": "198px",
+                                    "transform": "rotate(0deg)",
+                                    "transformOrigin": "center center",
+                                    "webkitTransform": "rotate(0deg)",
+                                    "webkitTransformOrigin": "center center",
+                                    "width": "170px",
+                                    "type": "inclined-plane",
+                                    "angle": "0",
+                                    "friction": "0.05",
+                                    "centerX": "356",
+                                    "centerY": "213"
+                                },
+                                {
+                                    "0": "left",
+                                    "1": "top",
+                                    "2": "width",
+                                    "3": "height",
+                                    "height": "20px",
+                                    "left": "373px",
+                                    "top": "644px",
+                                    "width": "100px",
+                                    "type": "lever",
+                                    "angle": "0",
+                                    "fulcrum": "right",
+                                    "pivot": "0.5",
+                                    "friction": "1",
+                                    "centerX": "423",
+                                    "centerY": "654"
+                                },
+                                {
+                                    "0": "left",
+                                    "1": "top",
+                                    "2": "width",
+                                    "3": "height",
+                                    "4": "background-color",
+                                    "backgroundColor": "rgb(204, 204, 204)",
+                                    "height": "10px",
+                                    "left": "413px",
+                                    "top": "607px",
+                                    "width": "10px",
+                                    "type": "domino",
+                                    "angle": "0",
+                                    "friction": "1",
+                                    "centerX": "418",
+                                    "centerY": "612"
+                                },
+                                {
+                                    "0": "left",
+                                    "1": "top",
+                                    "2": "background-color",
+                                    "3": "border-top-left-radius",
+                                    "4": "border-top-right-radius",
+                                    "5": "border-bottom-right-radius",
+                                    "6": "border-bottom-left-radius",
+                                    "7": "width",
+                                    "8": "height",
+                                    "backgroundColor": "rgb(58, 103, 202)",
+                                    "borderBottomLeftRadius": "100%",
+                                    "borderBottomRightRadius": "100%",
+                                    "borderRadius": "100%",
+                                    "borderTopLeftRadius": "100%",
+                                    "borderTopRightRadius": "100%",
+                                    "height": "15px",
+                                    "left": "428px",
+                                    "top": "181px",
+                                    "webkitBorderBottomLeftRadius": "100%",
+                                    "webkitBorderBottomRightRadius": "100%",
+                                    "webkitBorderRadius": "100%",
+                                    "webkitBorderTopLeftRadius": "100%",
+                                    "webkitBorderTopRightRadius": "100%",
+                                    "width": "15px",
+                                    "type": "marble",
+                                    "angle": "0",
+                                    "radius": "15",
+                                    "centerX": "435.5",
+                                    "centerY": "188.5"
+                                },
+                                {
+                                    "0": "left",
+                                    "1": "top",
+                                    "2": "width",
+                                    "3": "height",
+                                    "4": "transform",
+                                    "5": "transform-origin",
+                                    "height": "30px",
+                                    "left": "139px",
+                                    "top": "285px",
+                                    "transform": "rotate(0deg)",
+                                    "transformOrigin": "center center",
+                                    "webkitTransform": "rotate(0deg)",
+                                    "webkitTransformOrigin": "center center",
+                                    "width": "150px",
+                                    "type": "inclined-plane",
+                                    "angle": "0",
+                                    "friction": "0.05",
+                                    "centerX": "214",
+                                    "centerY": "300"
+                                },
+                                {
+                                    "0": "left",
+                                    "1": "top",
+                                    "2": "width",
+                                    "3": "height",
+                                    "4": "background-color",
+                                    "backgroundColor": "rgb(255, 255, 170)",
+                                    "height": "30px",
+                                    "left": "241px",
+                                    "top": "255px",
+                                    "width": "50px",
+                                    "type": "bucket",
+                                    "angle": "0",
+                                    "centerX": "266",
+                                    "centerY": "270"
+                                }
+                            ];
+                            debugConfig.forEach(item => {
+                                if (item.enableMarbles) {
+                                    enableMarbles = item.enableMarbles;
+                                } else {
+                                    createDroppedComponent(item.type, parseInt(item.centerX), parseInt(item.centerY), item);
+                                }
+                            });
+                        });
+                    }
                 }
             });
         });
@@ -259,21 +485,13 @@
         scenarioButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const scenario = button.getAttribute('data-scenario');
-                let scenarioText = "";
+                let scenarioText = "COMING SOON\n";
                 if (scenario === "bucket") {
-                    scenarioText = "Bucket Challenge: A marble will drop from the top left. Your goal is to guide it to the bucket at the bottom right.";
+                    scenarioText += "Bucket Challenge: A marble will drop from the top left. Your goal is to guide it to the bucket at the bottom right.";
                 } else if (scenario === "reveal-gift") {
-                    scenarioText = "Reveal a Gift: A gift box is connected to a pulley. Your goal is to lift the box to reveal the gift!";
+                    scenarioText += "Reveal a Gift: A gift box is connected to a pulley. Your goal is to lift the box to reveal the gift!";
                 }
-                showPrompt(scenarioText, false, "").then((response) => {
-                    if (response) {
-                        scenarioSelection.style.display = 'none';
-                        builderInterface.style.display = 'block';
-                        builderView.style.display = 'block';
-                        simulationView.style.display = 'none';
-                        updateConfigList();
-                    }
-                });
+                showPrompt(scenarioText, false, "");
             });
         });
 
@@ -299,7 +517,7 @@
         document.getElementById('save-config').addEventListener('click', () => {
             showPrompt("Enter a name for this configuration:").then(configName => {
                 if (!configName) return;
-                const configData = [];
+                const configData = [{enableMarbles}];
                 const comps = builderCanvas.querySelectorAll('.dropped-component');
                 comps.forEach(comp => {
                     configData.push({
@@ -329,7 +547,11 @@
             }
             builderCanvas.innerHTML = '';
             configData.forEach(item => {
-                createDroppedComponent(item.type, parseInt(item.centerX), parseInt(item.centerY), item);
+                if (item.enableMarbles) {
+                    enableMarbles = item.enableMarbles;
+                } else {
+                    createDroppedComponent(item.type, parseInt(item.centerX), parseInt(item.centerY), item);
+                }
             });
             saveState();
             alert("Configuration loaded!");
@@ -395,7 +617,7 @@
                 newComponent.style.width = properties.width || '20px';
                 newComponent.style.height = properties.height || '60px';
                 newComponent.style.backgroundColor = '#ccc';
-                newComponent.dataset.tiltDomino = properties.tiltDomino || 'no';
+                newComponent.dataset.friction = properties.friction || '1';
             }
 
             // Inclined Plane
@@ -426,6 +648,17 @@
                 newComponent.style.height = properties.height || '20px';
                 newComponent.dataset.fulcrum = properties.fulcrum || 'center';
                 newComponent.dataset.pivot = properties.pivot || '0.5';
+                newComponent.dataset.friction = properties.friction || '1';
+            }
+
+            // Marble
+            if (componentType === 'marble') {
+                newComponent.innerText = 'Marble';
+                newComponent.style.backgroundColor = '#3a67ca';
+                newComponent.dataset.radius = properties.radius || '15';
+                newComponent.style.borderRadius = '100%';
+                newComponent.style.width = `${newComponent.dataset.radius}px`;
+                newComponent.style.height = `${newComponent.dataset.radius}px`;
             }
 
             // Pendulum
@@ -514,13 +747,14 @@
                         const fields = [
                             {name: 'width', label: 'Width:', value: newComponent.style.width},
                             {name: 'height', label: 'Height:', value: newComponent.style.height},
-                            {name: 'tiltDomino', label: 'Tilt this domino? (yes or no):', value: newComponent.dataset.tiltDomino}
+                            {name: 'friction', label: 'Friction coefficient:', value: newComponent.dataset.friction},
+
                         ];
                         showPropertiesDialog('Edit Domino Properties', fields).then(data => {
                             if (data !== null) {
                                 newComponent.style.width = data.width;
                                 newComponent.style.height = data.height;
-                                newComponent.dataset.tiltDomino = data.tiltDomino;
+                                newComponent.dataset.friction = data.friction;
                             }
                         });
                     } else if (newComponent.dataset.type === 'inclined-plane') {
@@ -549,13 +783,23 @@
                             },
                             {name: 'width', label: 'Width:', value: newComponent.style.width},
                             {name: 'height', label: 'Height:', value: newComponent.style.height},
-
+                            {name: 'friction', label: 'Friction coefficient:', value: newComponent.dataset.friction},
                         ];
                         showPropertiesDialog('Edit Lever Properties', fields).then(data => {
                             if (data !== null) {
                                 newComponent.dataset.fulcrum = data.fulcrum;
+                                newComponent.dataset.friction = data.friction;
                                 newComponent.style.width = data.width;
                                 newComponent.style.height = data.height;
+                            }
+                        });
+                    } else if (newComponent.dataset.type === 'marble') {
+                        const fields = [
+                            {name: 'radius', label: 'Radius:', value: newComponent.dataset.radius},
+                        ];
+                        showPropertiesDialog('Edit Marble Properties', fields).then(data => {
+                            if (data !== null) {
+                                newComponent.dataset.radius = data.radius;
                             }
                         });
                     } else if (newComponent.dataset.type === 'pendulum') {
@@ -692,6 +936,7 @@
                         this.windowWidth = canvasWidth;
                         this.windowHeight = canvasHeight;
                         this.configData = configData;
+                        this.enableMarbles = enableMarbles;
                         this.levers = [];
                         this.pulleys = [];
                     },
@@ -722,7 +967,6 @@
                 // -------------------------
                 // Bucket
                 if (item.type === 'bucket') {
-                    // A simple dynamic bucket that could, for instance, collect marbles.
                     const bucket = this.matter.bodies.rectangle(centerX, centerY, width, height, {
                         restitution: 0,
                         friction: parseFloat(item.friction) || 0.1
@@ -736,13 +980,26 @@
                 if (item.type === 'domino') {
                     const domino = this.matter.bodies.rectangle(centerX, centerY, width, height, {
                         restitution: 0,
-                        friction: 1
+                        friction: parseFloat(item.friction) || 1,
                     });
+                    domino.label = 'domino';
                     this.matter.world.add(domino);
 
-                    if(item.tiltDomino === 'yes') {
-                        this.matter.body.rotate(domino, 0.3);
-                    }
+                    // Collision event: allow dominoes to be collected by buckets.
+                    this.matter.world.on('collisionstart', function (event) {
+                        event.pairs.forEach(pair => {
+                            const {bodyA, bodyB} = pair;
+                            if ((bodyA.label === 'bucket' && bodyB.label === 'domino') ||
+                                (bodyB.label === 'bucket' && bodyA.label === 'domino')) {
+                                const bucket = bodyA.label === 'bucket' ? bodyA : bodyB;
+                                const domino = bodyA.label === 'domino' ? bodyA : bodyB;
+                                // Increase the bucket's mass (up to a maximum, e.g. 2.5).
+                                this.matter.body.setMass(bucket, Math.min(bucket.mass + domino.mass, 2.5));
+                                // Remove the domino.
+                                this.matter.world.remove(domino);
+                            }
+                        });
+                    }, this);
                 }
 
                 // -------------------------
@@ -786,7 +1043,7 @@
                     let leverConstraint = this.matter.constraint.create({
                         bodyA: lever,
                         pointA: {x: -50 + pivotRatio * 100, y: 0},
-                        pointB: { x: pivotX, y: pivotY - leverThickness },
+                        pointB: {x: pivotX, y: pivotY - leverThickness},
                         stiffness: 1,
                         length: 0
                     });
@@ -801,6 +1058,17 @@
                 }
 
                 // -------------------------
+                // Marble
+                if (item.type === 'marble') {
+                    let marble = this.matter.bodies.circle(centerX, centerY, parseFloat(item.radius), {
+                        restitution: 0.1, // Make the marble less bouncy
+                        density: 0.3 // make the marble heavy
+                    });
+                    marble.label = 'marble';
+                    this.matter.world.add(marble);
+                }
+
+                // -------------------------
                 // Pendulum
                 if (item.type === 'pendulum') {
                     // For a pendulum, we create a bob (circle) and attach it to a fixed pivot above.
@@ -808,6 +1076,7 @@
                     const bob = this.matter.bodies.circle(centerX, centerY, parseInt(item.radius), {
                         restitution: 0.8,
                         friction: parseFloat(item.friction) || 0.1,
+                        density: 0.5
                     });
                     this.matter.world.add(bob);
                     const pendulumConstraint = this.matter.constraint.create({
@@ -815,7 +1084,7 @@
                         bodyB: bob,
                         pointB: {x: 0, y: 0},
                         length: 100,
-                        stiffness: 1
+                        stiffness: 0.9
                     });
                     this.matter.world.add(pendulumConstraint);
                 }
@@ -924,18 +1193,21 @@
                     // Create a composite: a board with two wheels.
                     const board = this.matter.bodies.rectangle(centerX, centerY, width, height, {
                         restitution: 0,
-                        friction: parseFloat(item.friction) || 0.2
+                        friction: parseFloat(item.friction) || 0.2,
+                        density: 0.4
                     });
                     const wheelRadius = height / 2;
                     const wheelOffsetX = height + 10;
                     // Position wheels slightly below the board.
                     const leftWheel = this.matter.bodies.circle(centerX - wheelOffsetX, centerY + height, wheelRadius, {
                         restitution: 0,
-                        friction: parseFloat(item.friction) || 0.8
+                        friction: parseFloat(item.friction) || 0.8,
+                        density: 0.4
                     });
                     const rightWheel = this.matter.bodies.circle(centerX + wheelOffsetX, centerY + height, wheelRadius, {
                         restitution: 0,
-                        friction: parseFloat(item.friction) || 0.8
+                        friction: parseFloat(item.friction) || 0.8,
+                        density: 0.4
                     });
                     this.matter.world.add(board);
                     this.matter.world.add(leftWheel);
@@ -980,37 +1252,39 @@
 
                 // -------------------------
                 // Default: if no specific type, create a static box.
-                if (!['bucket', 'domino', 'inclined-plane', 'lever', 'pendulum', 'pulley', 'skateboard', 'staircase'].includes(item.type)) {
+                if (!['bucket', 'domino', 'inclined-plane', 'lever', 'marble', 'pendulum', 'pulley', 'skateboard', 'staircase'].includes(item.type)) {
                     let box = this.matter.bodies.rectangle(centerX, centerY, 80, 80, {isStatic: true});
                     this.matter.world.add(box);
                 }
             });
 
-            // On pointer down, drop a dynamic marble.
-            this.input.on('pointerdown', function (pointer) {
-                let marble = this.matter.bodies.circle(pointer.x, pointer.y, 15, {
-                    restitution: 0.8,
-                    friction: 0.005
-                });
-                marble.label = 'marble';
-                this.matter.world.add(marble);
-            }, this);
+            if (this.enableMarbles) {
+                // On pointer down, drop a dynamic marble.
+                this.input.on('pointerdown', function (pointer) {
+                    let marble = this.matter.bodies.circle(pointer.x, pointer.y, 15, {
+                        restitution: 0.1, // Make the marble less bouncy
+                        density: 1 // make the marble heavy
+                    });
+                    marble.label = 'marble';
+                    this.matter.world.add(marble);
+                }, this);
 
-            // Collision event: when a marble hits the bucket, increase the bucket's mass and remove the marble.
-            this.matter.world.on('collisionstart', function (event) {
-                event.pairs.forEach(pair => {
-                    const {bodyA, bodyB} = pair;
-                    if ((bodyA.label === 'bucket' && bodyB.label === 'marble') ||
-                        (bodyB.label === 'bucket' && bodyA.label === 'marble')) {
-                        const bucket = bodyA.label === 'bucket' ? bodyA : bodyB;
-                        const marble = bodyA.label === 'marble' ? bodyA : bodyB;
-                        // Increase the bucket's mass (up to a maximum, e.g. 2.5).
-                        this.matter.body.setMass(bucket, Math.min(bucket.mass + marble.mass, 2.5));
-                        // Remove the marble.
-                        this.matter.world.remove(marble);
-                    }
-                });
-            }, this);
+                // Collision event: when a marble hits the bucket, increase the bucket's mass and remove the marble.
+                this.matter.world.on('collisionstart', function (event) {
+                    event.pairs.forEach(pair => {
+                        const {bodyA, bodyB} = pair;
+                        if ((bodyA.label === 'bucket' && bodyB.label === 'marble') ||
+                            (bodyB.label === 'bucket' && bodyA.label === 'marble')) {
+                            const bucket = bodyA.label === 'bucket' ? bodyA : bodyB;
+                            const marble = bodyA.label === 'marble' ? bodyA : bodyB;
+                            // Increase the bucket's mass (up to a maximum, e.g. 2.5).
+                            this.matter.body.setMass(bucket, Math.min(bucket.mass + marble.mass, 2.5));
+                            // Remove the marble.
+                            this.matter.world.remove(marble);
+                        }
+                    });
+                }, this);
+            }
         }
 
         function updateSim() {
@@ -1053,6 +1327,23 @@
             }
         }
 
+        /***** Open up the Configuration for the Simulation *****/
+        document.getElementById('configure-simulation').addEventListener('click', () => {
+            const fields = [
+                {
+                    name: 'enableMarbles',
+                    label: 'Enable Marbles on Click? (yes or no):',
+                    value: !!enableMarbles && enableMarbles === true ? 'yes' : 'no'
+                },
+            ];
+
+            showPropertiesDialog('Configure Simulation', fields).then(data => {
+                if (data !== null) {
+                    enableMarbles = data.enableMarbles === 'yes';
+                }
+            });
+        });
+
         /***** Transition to Simulation Mode *****/
         document.getElementById('run-simulation').addEventListener('click', () => {
             builderView.style.display = 'none';
@@ -1061,9 +1352,6 @@
             const comps = builderCanvas.querySelectorAll('.dropped-component');
             comps.forEach(comp => {
                 configData.push({
-                    // type,
-                    // x,
-                    // y,
                     ...Object.fromEntries(Object.entries(comp.style).filter(([_, value]) => Boolean(value))), // only include defined properties
                     ...Object.fromEntries(Object.entries(comp.dataset).filter(([_, value]) => Boolean(value)))
                 });
